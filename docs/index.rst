@@ -3,18 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-atlas_free_slice_alignment documentation
+Atlas Free Slice Alignment Documentation
 ========================================
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+   :maxdepth: 2
+   :caption: Table of Contents (Scripts):
 
    slice_alignment
    slice_alignment_help
 
 .. toctree::
    :maxdepth: 1
-   :caption: Example:
+   :caption: Example Jupyter Notebook:
 
    notebooks/example.ipynb
