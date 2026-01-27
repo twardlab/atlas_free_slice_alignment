@@ -8,13 +8,13 @@ atlas_free_slice_alignment documentation
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
+   :caption: Table of Contents (Scripts):
 
    slice_alignment
    slice_alignment_help
 
 .. toctree::
    :maxdepth: 1
-   :caption: Example:
+   :caption: Example Jupyter Notebook:
 
    notebooks/example.ipynb
