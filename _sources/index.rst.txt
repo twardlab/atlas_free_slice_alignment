@@ -3,11 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-atlas_free_slice_alignment documentation
+Atlas Free Slice Alignment Documentation
 ========================================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Table of Contents (Scripts):
 
    slice_alignment
