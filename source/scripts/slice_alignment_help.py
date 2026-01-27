@@ -7,7 +7,7 @@ from scipy.interpolate import interpn
 from IPython.display import display
 
 def atlas_from_aligned_slices_and_weights(xI,I,dtype,device,phiiRiJ,W,asquare,niter=10,draw=0,fig=None,hfig=None,anisotropy_factor=4**2,return_K=False,return_fwhm=False):
-    '''
+    """
     Inputs are 3D pixel locations. xI
     
     Initial guess of atlas I.
@@ -66,7 +66,7 @@ def atlas_from_aligned_slices_and_weights(xI,I,dtype,device,phiiRiJ,W,asquare,ni
     ER : TODO
         TODO
     
-    '''
+    """
     
     if draw:
         if fig is None:
