@@ -6,12 +6,15 @@
 atlas_free_slice_alignment documentation
 ========================================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
-
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
+   slice_alignment
+   slice_alignment_help
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Example:
+
+   notebooks/example.ipynb
