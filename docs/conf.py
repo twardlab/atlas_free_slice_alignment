@@ -31,7 +31,7 @@ latex_documents = [
 ]
 
 # Skip the following packages when building documentation
-autodoc_mock_imports = ['torch','numpy','argparse','matplotlib','scipy']
+autodoc_mock_imports = ['torch','numpy','argparse','matplotlib','scipy','IPython']
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
