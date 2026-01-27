@@ -1,0 +1,1967 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Goal &#8212; atlas_free_slice_alignment  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+    
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">atlas_free_slice_alignment  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Goal</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="Goal">
+<h1>Goal<a class="headerlink" href="#Goal" title="Link to this heading">¶</a></h1>
+<p>In this version I will try to parallelize things over slices</p>
+</section>
+<section id="for-andrew">
+<h1>for andrew<a class="headerlink" href="#for-andrew" title="Link to this heading">¶</a></h1>
+<p>As before the goal is</p>
+<ol class="arabic simple">
+<li><p>Create another .py file that can be imported</p></li>
+<li><p>put all the functions here into the .py file</p></li>
+<li><p>For each function add a skeleton for documentation</p></li>
+<li><p>Add a main function and a command line linterface</p></li>
+<li><p>Set up github and sphynx</p></li>
+</ol>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import torch
+torch.concatenate=torch.cat # compatibility
+import numpy as np
+import matplotlib.pyplot as plt
+from glob import glob
+from os.path import join,basename,splitext
+%matplotlib widget
+from scipy.interpolate import interpn
+plt.set_loglevel(&#39;critical&#39;)
+# from scipy.misc import derivative
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Helper-functions">
+<h1>Helper functions<a class="headerlink" href="#Helper-functions" title="Link to this heading">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def x_from_n_d(n,d):
+    &#39;&#39;&#39;
+    This function takes in an image size and pixel size, and outputs a zero centered coordinate system
+    &#39;&#39;&#39;
+    x = [torch.arange(ni)*di - (ni-1)*di/2 for ni,di in zip(n,d)]
+    return x
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def extent_from_x(x):
+    &#39;&#39;&#39;This function gets a coordinate system and output the extent argument for matplotlib imshow&#39;&#39;&#39;
+    d = [xi[1]-xi[0] for xi in x]
+    return (x[1][0]-d[1]/2, x[1][-1]+d[1]/2, x[0][-1]+d[0]/2, x[0][0]-d[0]/2)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def down2ax(I,ax):
+    ndims = I.ndim
+    s0 = [slice(None) for i in range(ndims)]
+    s1 = [slice(None) for i in range(ndims)]
+    n = I.shape[ax]
+    nd = n//2
+
+    s0[ax] = slice(0,nd*2,2)
+    s1[ax] = slice(1,nd*2,2)
+    Id = I[tuple(s0)]*0.5 + I[tuple(s1)]*0.5
+    return Id
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def down2(I,ax):
+    for a in ax:
+        I = down2ax(I,a)
+    return I
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># here we have a list of files, these should be an input.
+# this example is the moon observed from a telescope.
+# due to the atmosphere the moon looks &quot;wiggly&quot; from frame to frame, and we try to straighten out the wiggles
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>filesmoon=[&#39;frame_1_delay-0.2s[1].png&#39;,&#39;frame_0_delay-0.2s[1].png&#39;,&#39;frame_0_delay-0.2s[1].png&#39;,&#39;frame_1_delay-0.2s[1].png&#39;,&#39;frame_2_delay-0.2s[1].png&#39;,&#39;frame_3_delay-0.2s[1].png&#39;,&#39;frame_4_delay-0.2s[1].png&#39;,&#39;frame_5_delay-0.2s[1].png&#39;,&#39;frame_6_delay-0.2s[1].png&#39;,&#39;frame_7_delay-0.2s[1].png&#39;,&#39;frame_7_delay-0.2s[1].png&#39;,&#39;frame_6_delay-0.2s[1].png&#39;]
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Get-some-files">
+<h1>Get some files<a class="headerlink" href="#Get-some-files" title="Link to this heading">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>[np.unique(wi) for wi in W_]
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>Ji.shape[:-1]
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># something weird here to load the files
+# andrew, try to make it less weird
+
+import os
+cwd = os.getcwd()
+img_dir = os.path.join(cwd,&#39;images&#39;)
+
+Nfiles=12
+#root = &#39;/home/dtward/mounts/bmaproot/nafs/dtward/mitra_data/787_nissl_good_png/&#39;
+#root = &#39;/nafs/dtward/mitra_data/787_nissl_good_png/&#39;
+#root = &#39;/Users/12032/Downloads/mouse brain slice data&#39;
+#files = glob(join(root,&#39;*.png&#39;))
+def key(f):
+    return int( splitext(basename(f))[0].split(&#39;_&#39;)[-1] )
+#files.sort(key=key)
+n = len(filesmoon)
+files = filesmoon[n//2-Nfiles//2 : n//2-Nfiles//2 + Nfiles]
+
+#fig,ax = plt.subplots(1,2)
+fig,ax = plt.subplots()
+hfig = display(fig,display_id=True)
+J_ = []
+W_ = []
+
+for i in range(Nfiles):
+    Ji = plt.imread(os.path.join(img_dir,files[i]))
+
+    if Ji.dtype == np.uint8:
+        Ji = Ji / 255.0
+    if Ji.shape[-1] == 4:
+        Ji = Ji[...,:3]
+
+    # find any rows or colums that are all ones
+    if Ji.ndim == 2:
+        Ji = Ji[...,None].repeat(3,axis=-1)
+    rowones = np.all(Ji&gt;=0.95,(0,-1))
+    colones = np.all(Ji&gt;=0.95,(1,-1))
+    Wi = (1-rowones[None,:])*(1-colones[:,None])
+
+
+    down = 1
+
+    ax.cla()
+    ax.imshow(Ji)
+    #ax[0].cla()
+    #ax[0].imshow(Ji)
+    #ax[1].cla()
+    #ax[1].imshow(Wi)
+    hfig.update(fig)
+    J_.append(Ji)
+    W_.append(Wi)
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># next, every image is interpolated onto a grid of the same size
+nJ = [Ji.shape for Ji in J_]
+nJ = np.max(nJ,0)
+nJ = [len(J_),nJ[0],nJ[1]]
+x2d = [np.arange(n)*down - (n-1)*down/2 for n in nJ[1:]]
+X2d = np.stack(np.meshgrid(*x2d,indexing=&#39;ij&#39;),-1)
+fig,ax = plt.subplots()
+hfig = display(fig,display_id=True)
+J__ = []
+W__ = []
+for Ji,Wi in zip(J_,W_):
+    x = [np.arange(n)*down - (n-1)*down/2 for n in Ji.shape[:2]]
+    Ji_ = interpn(x,Ji,X2d,bounds_error=False,method=&#39;nearest&#39;)
+    Wi_ = interpn(x,Wi,X2d,bounds_error=False,method=&#39;nearest&#39;)
+
+    Wi_ = (1.0 - np.isnan(Ji_[...,0]))*Wi_
+    Ji_[np.isnan(Ji_)] = 0
+    Wi_[np.isnan(Wi_)] = 0
+    J__.append(Ji_)
+    W__.append(Wi_)
+    ax.cla()
+    ax.imshow(Ji_)
+    hfig.update(fig)
+
+# note our convention is to use
+print([ji.shape for ji in J_])
+print([wi.shape for wi in W_])
+J = np.stack(J__,0).transpose(-1,0,1,2)
+W = np.stack(W__)
+xJ = [np.arange(nJ[0])-(nJ[0]-1)/2,x2d[0],x2d[1]]
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># pad
+# optionally, we may pad the first and last slice.  This is related to FFT for bluring and circular correlatoins.
+# this padding parameter will have to be exposed
+npad = 0
+J = np.pad(J,((0,0),(npad,npad),(0,0),(0,0)),mode=&#39;reflect&#39;)
+W = np.pad(W,((npad,npad),(0,0),(0,0)),mode=&#39;reflect&#39;)
+nJ = J.shape[1:]
+xJ = [np.arange(nJ[0])-(nJ[0]-1)/2,x2d[0],x2d[1]]
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Convert-to-pytorch">
+<h1>Convert to pytorch<a class="headerlink" href="#Convert-to-pytorch" title="Link to this heading">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>device = &#39;cpu&#39;
+dtype = torch.float32
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>J = torch.tensor(J,dtype=dtype,device=device)
+W = torch.tensor(W,dtype=dtype,device=device)
+xJ = [torch.tensor(x,dtype=dtype,device=device) for x in xJ]
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Interpolation">
+<h1>Interpolation<a class="headerlink" href="#Interpolation" title="Link to this heading">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def interp(x,I,phii,**kwargs):
+    &#39;&#39;&#39;
+    Interpolate a signal with specified voxel spacing, in torch.
+
+    Input data should be 3D images, with first dimension a channel.
+
+    phii has xyz on LAST dimension.
+
+    What if there&#39;s only one slice?
+    &#39;&#39;&#39;
+    # first we center phii based on x
+    x0 = torch.stack([xi[0] for xi in x])
+    d = torch.stack([xi[-1] - xi[0] for xi in x]) # this will fail if there&#39;s only one slice
+    phii = (phii - x0)/d*2-1
+
+    if &#39;align_corners&#39; not in kwargs:
+        kwargs[&#39;align_corners&#39;] = True
+
+    phiI = torch.nn.functional.grid_sample(I[None],phii.flip(-1)[None],**kwargs)[0]
+    return phiI
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def A2DtoA3D(A):
+    row = torch.concatenate( (torch.ones_like(A[:,0,0,None,None]) , torch.zeros_like(A[:,0,None])  ),-1)
+    col = torch.zeros_like(A[:,:,0,None])
+
+    colA = torch.concatenate([col,A],-1)
+
+    return torch.concatenate([row,colA],-2)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># to apply a linear transform I need a sequence of 2D affine matrices
+XJ = torch.stack(torch.meshgrid(xJ,indexing=&#39;ij&#39;),-1)
+A = torch.eye(3)
+A[0,0] = 1.1
+A[1,1] = 0.9
+A = A[None].repeat(nJ[0],1,1)
+A = A2DtoA3D(A)
+Ai = torch.linalg.inv(A)
+# another function that can be imported
+def AX(Ai,XJ):
+    Xs = (Ai[:,None,None,:3,:3]@XJ[...,None])[...,0] + Ai[:,None,None,:3,-1]
+    return Xs
+Xs = AX(Ai,XJ)
+# first test identity
+AJ = interp(xJ,J,XJ)
+fig,ax = plt.subplots()
+ax.imshow(J[:,AJ.shape[1]//2].permute(1,2,0))
+fig,ax = plt.subplots()
+ax.imshow(AJ[:,AJ.shape[1]//2].permute(1,2,0))
+AJ = interp(xJ,J,Xs)
+fig,ax = plt.subplots()
+ax.imshow(AJ[:,AJ.shape[1]//2].permute(1,2,0))
+fig,ax = plt.subplots()
+ax.imshow(AJ[:,:,AJ.shape[2]//2].permute(1,2,0),aspect=&#39;auto&#39;)
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Group-exponential">
+<h1>Group exponential<a class="headerlink" href="#Group-exponential" title="Link to this heading">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def exp(x,v,N=5):
+    &#39;&#39;&#39;
+    Group exponential by scaling and squaring
+    v should have xyz components at the end and be 3d
+
+    Take a small displacement, and compose it with itself
+    many times, to give a big displacement.
+
+    If N = 1, the output is id + v
+
+    If N = 2, the output is (id + v/2)\circ (id + v/2)
+
+    If N = 3, the output is (id + v/8)\circ ... \circ (id + v/8)
+    &#39;&#39;&#39;
+    X = torch.stack(torch.meshgrid(*x,indexing=&#39;ij&#39;),-1)
+    phi = X.clone() + v / 2**N
+    for i in range(N-1):
+        # when interpolating, move xyz component to the beginning, then back
+        # 0 boundary conditions are probably ok
+        phi = interp(x,(phi-X).permute(-1,0,1,2),phi).permute(1,2,3,0) + phi
+
+    return phi
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># let&#39;s test it
+# get a set of sample points for v
+extendv = 1.1 # i.e. make it 10% bigger than the domain of J, to avoid wraparound
+dv = down*2
+vmin1 = torch.amin(xJ[1])
+vmin2 = torch.amin(xJ[2])
+vmax1 = torch.amax(xJ[1])
+vmax2 = torch.amax(xJ[2])
+vc1 = (vmin1 + vmax1)/2
+vc2 = (vmin2 + vmax2)/2
+vr1 = (vmax1-vmin1)/2*extendv
+vr2 = (vmax2-vmin2)/2*extendv
+v1 = torch.arange(vc1-vr1,vc1+vr1,dv,device=device,dtype=dtype)
+v2 = torch.arange(vc2-vr2,vc2+vr2,dv,device=device,dtype=dtype)
+xv = [xJ[0],v1,v2]
+XV = torch.stack( torch.meshgrid(*xv,indexing=&#39;ij&#39;) , -1)
+XV2d = XV[...,1:]
+v2d = torch.zeros_like(XV2d)
+v2d = torch.randn(v2d.shape,dtype=v2d.dtype)
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># get highpass and lowpass operators for 2d reg
+a = 10.0
+p = 2.0
+
+def L_from_xv_a_p(xv,a,p):
+    dv = xv[-1][1] - xv[-1][0]
+    fv = [torch.arange(n)/n/dv for n in (len(xv[-2]), len(xv[-1]))]
+    FV = torch.stack(torch.meshgrid(fv,indexing=&#39;ij&#39;),-1)
+    L = (1.0 - torch.sum(2.0*a**2*(torch.cos(2.0*np.pi*FV*dv) - 1)/dv,-1))**p
+    return L
+L = L_from_xv_a_p(xv,a,p)
+LL = L**2
+K = 1.0/LL
+
+fig,ax = plt.subplots()
+ax.imshow(L)
+fig,ax = plt.subplots()
+ax.imshow(K)
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>v2d = torch.fft.ifftn( torch.fft.fftn(v2d,dim=(1,2))*K[...,None] , dim=(1,2),).real
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># need to convert v2d to v3d
+def v2DToV3D(v2d):
+    return torch.concatenate( ( torch.zeros_like(v2d[...,0,None]), v2d ) , -1)
+v3d = v2DToV3D(v2d)
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>v3d /= torch.std(v3d)
+v3d *= 20
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>v = v2d # for later
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>phi = exp(xv,v3d)
+fig,ax = plt.subplots()
+ax.contour(xv[2],xv[1],phi[phi.shape[0]//2,...,1])
+ax.contour(xv[2],xv[1],phi[phi.shape[0]//2,...,2])
+ax.set_title(&#39;Example deformation&#39;)
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Weighted-SSE-registration">
+<h1>Weighted SSE registration<a class="headerlink" href="#Weighted-SSE-registration" title="Link to this heading">¶</a></h1>
+<p>inputs are</p>
+<p>I,xI J,xJ W</p>
+<p>v,xv</p>
+<p>A</p>
+<p>a p</p>
+<p>ep</p>
+<p>sigmaM sigmaR</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># TODO: CONTINUE CONVERTING NOTEBOOK INTO SCRIPTS
+
+# initial guess
+I = (torch.sum(J*W,1,keepdims=True)/(1e-6 + torch.sum(W,0,keepdims=True))).repeat(1,J.shape[1],1,1)
+xI = [x.clone() for x in xJ]
+fig,ax = plt.subplots()
+ax.imshow(I[:,I.shape[1]//2].permute(1,2,0))
+fig,ax = plt.subplots()
+ax.imshow(I[:,:,I.shape[2]//2].permute(1,2,0),aspect=&#39;auto&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># transform an image with phi
+phiI = interp(xI,I,phi)
+fig,ax = plt.subplots()
+ax.imshow(phiI[:,AJ.shape[1]//2].permute(1,2,0))
+
+
+
+fig,ax = plt.subplots()
+ax.imshow(phiI[:,:,phiI.shape[2]//2].permute(1,2,0),aspect=&#39;auto&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def transform_image(xI,I,xv,v,A,xJ,**kwargs):
+    &#39;&#39;&#39; Note this is redundant with the below, but is a nice helper function&#39;&#39;&#39;
+    XJ = torch.stack(torch.meshgrid(*xJ,indexing=&#39;ij&#39;),-1)
+    XV = torch.stack(torch.meshgrid(*xv,indexing=&#39;ij&#39;),-1)
+
+    Ai = torch.linalg.inv(A)
+    Ai = A2DtoA3D(Ai)
+    Xs = AX(Ai,XJ)
+
+    # convert v to phii
+    phii = exp(xv,v2DToV3D(-v))
+
+    # sample at Xs
+    Xs = interp(xv,(phii - XV).permute(-1,0,1,2), Xs).permute(1,2,3,0) + Xs
+
+    # transform the image
+    if &#39;padding_mode&#39; not in kwargs:
+        kwargs[&#39;padding_mode&#39;] = &#39;border&#39;
+    AphiI = interp(xI,I,Xs,**kwargs)
+
+    return AphiI
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def inverse_transform_image(xI,I,xv,v,A,xJ,**kwargs):
+    &#39;&#39;&#39; Note this is redundant with the below, but is a nice helper function&#39;&#39;&#39;
+    XJ = torch.stack(torch.meshgrid(*xJ,indexing=&#39;ij&#39;),-1)
+    XV = torch.stack(torch.meshgrid(*xv,indexing=&#39;ij&#39;),-1)
+
+
+    A = A2DtoA3D(A)
+
+
+    # convert v to phii
+    phi = exp(xv,v2DToV3D(v))
+
+    # sample on xj
+    phis = interp(xv,(phi-XV).permute(-1,0,1,2),XJ).permute(1,2,3,0) + XJ
+
+    Xs = AX(A,phis)
+
+    # transform the image
+    if &#39;padding_mode&#39; not in kwargs:
+        kwargs[&#39;padding_mode&#39;] = &#39;border&#39;
+    phiiAiI = interp(xI,I,Xs,**kwargs)
+
+    return phiiAiI
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># andrew use this one, not the commented ones below
+def weighted_see_registration(xI,I,xJ,J,W,xv,v,A,a,p,sigmaM,sigmaR,niter,epT,epL,epv,draw=0,fig=None,hfig=None):
+
+    A.requires_grad = True
+    v.requires_grad = True
+
+    XJ = torch.stack(torch.meshgrid(*xJ,indexing=&#39;ij&#39;),-1)
+    XV = torch.stack(torch.meshgrid(*xv,indexing=&#39;ij&#39;),-1)
+    dv = torch.stack([x[1] - x[0] for x in xv])
+    Dv = torch.prod(dv)
+    dJ = torch.stack([x[1] - x[0] for x in xJ])
+    DJ = torch.prod(dJ)
+    L = L_from_xv_a_p(xv,a,p)
+    LL = L**2
+    K = 1.0/LL
+
+    Esave = []
+    Tsave = []
+    Lsave = []
+    maxvsave = []
+    if draw:
+        if fig is None:
+            fig,ax = plt.subplots(2,3)
+            ax = ax.ravel()
+        else:
+            fig.clf()
+            ax = []
+            for i in range(2):
+                for j in range(3):
+                    ax.append(fig.add_subplot(2,3,i*3+j+1))
+        if hfig is None:
+            hfig = display(fig,display_id=True)
+    for it in range(niter):
+        if v.grad is not None:
+            v.grad.zero_()
+        if A.grad is not None:
+            A.grad.zero_()
+        # act on XJ
+        Ai = torch.linalg.inv(A)
+        Ai = A2DtoA3D(Ai)
+        Xs = AX(Ai,XJ)
+
+        # convert v to phii
+        phii = exp(xv,v2DToV3D(-v))
+
+        # sample at Xs
+        Xs = interp(xv,(phii - XV).permute(-1,0,1,2), Xs).permute(1,2,3,0) + Xs
+
+        # transform the image
+        AphiI = interp(xI,I,Xs,padding_mode=&#39;border&#39;) # border boundary condition is important when we have a white background
+
+        # get error
+        EM = torch.sum((AphiI - J)**2*W)*DJ/sigmaM**2/2.0
+        ER = torch.sum(torch.sum( torch.abs( torch.fft.fftn(v,dim=(1,2)) )**2 , -1)*LL)/sigmaR**2/2.0/v[0,...,0].numel()*Dv
+        E = EM + ER
+        Esave.append([E.item(),EM.item(),ER.item()])
+        Tsave.append(    A[:,:2,-1].clone().detach().cpu().ravel().numpy()  )
+        Lsave.append( A[:,:2,:2].clone().detach().cpu().ravel().numpy()    )
+        maxvsave.append(  (torch.amax(torch.sum(v.clone().detach()**2,-1))**0.5).cpu().numpy().item()  )
+        # backprop
+        E.backward()
+
+        # update
+        with torch.no_grad():
+            # update T
+            A[:,:2,-1] -= A.grad[:,:2,-1]*epT
+            # update L
+            A[:,:2,:2] -= A.grad[:,:2,:2]*epL
+            # rigid
+            u,s,vh = torch.linalg.svd(A[:,:2,:2])
+            A[:,:2,:2] = u@vh
+
+
+            # update v
+            v[:] = v[:] - torch.fft.ifftn(torch.fft.fftn(v.grad,dim=(1,2))*K[...,None],dim=(1,2)).real*epv
+
+        # draw
+        with torch.no_grad():
+            if draw and (not it%draw or it == niter-1):
+                ax[0].cla()
+                ax[0].plot(Esave)
+                ax[0].set_title(&#39;energy&#39;)
+                ax[1].cla()
+                ax[1].plot(Tsave)
+                ax[1].set_title(&#39;Translation&#39;)
+                ax[2].cla()
+                ax[2].plot(Lsave)
+                ax[2].set_title(&#39;Linear&#39;)
+                ax[3].cla()
+                ax[3].plot(maxvsave)
+                ax[3].set_title(&#39;max |v|&#39;)
+
+
+                ax[4].cla()
+                ax[4].imshow(  ( (AphiI[:,:,J.shape[2]//2]-J[:,:,J.shape[2]//2])*W[:,J.shape[2]//2]  ).permute(1,2,0).cpu()*0.5+0.5  ,aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+                #ax[5].cla()
+                #ax[5].imshow(  (  (AphiI[:,:,:,J.shape[3]//2]-J[:,:,:,J.shape[3]//2])*W[:,:,J.shape[3]//2] ).permute(1,2,0).cpu()*0.5+0.5  ,aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+
+                ax[5].cla()
+                ax[5].imshow(  (  (AphiI[:,:,:,J.shape[3]//2]-J[:,:,:,J.shape[3]//2])*W[:,:,J.shape[3]//2] ).permute(1,2,0).cpu()*0.5+0.5  ,aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+
+                hfig.update(fig)
+
+    A.requires_grad = False
+    v.requires_grad = False
+
+    return A,v,E.item(),ER.item()
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># # this cell is just a test, it is not necessary in our code
+# A = torch.eye(3)[None].repeat(J.shape[1],1,1)
+# v = torch.zeros_like(v)
+
+# niter = 2
+# niter = 1
+# niter = 10
+# epT = 1e-2
+# epL = 1e-6
+# epv = 1e1
+# sigmaM = 1.0 # this should always be 1
+# sigmaR = 1e5
+# draw = 5
+
+
+# Anew,vnew,Eregistration,Ereg = weighted_see_registration(xI,I,xJ,J,W,xv,v,A,a,p,sigmaM,sigmaR,niter,epT,epL,epv,draw=5)
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Get-Jacobian-weights">
+<h1>Get Jacobian weights<a class="headerlink" href="#Get-Jacobian-weights" title="Link to this heading">¶</a></h1>
+<p>We we want the forward transformation</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def detjac(xv,v):
+    dv = [(x[1] - x[0]).item() for x in xv]
+    detjac = torch.linalg.det( torch.stack(torch.gradient( exp(xv,v2DToV3D(v))[...,1:] , dim=(1,2),spacing=(dv[1],dv[2])),-1) )
+    return detjac
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>Wdetjac = detjac(xv,vnew)
+fig,ax = plt.subplots()
+mappable = ax.imshow(Wdetjac[Wdetjac.shape[0]//2])
+plt.colorbar(mappable)
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Get-robustness-loss-and-weights">
+<h1>Get robustness loss and weights<a class="headerlink" href="#Get-robustness-loss-and-weights" title="Link to this heading">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def robust_loss(RphiI,xJ,J,W,c, return_weights=False):
+    &#39;&#39;&#39; we input the deformed atlas I, the target J, and the voxel coordinates of J, and the robust constant c
+    note there is a W here which should be binary because we&#39;re not going to sum over all the pixels
+
+    TODO
+    ----
+    pixel size factor will show up in the weights term also
+
+    &#39;&#39;&#39;
+
+    dxJ = torch.stack([(x[1]-x[0]) for x in xJ])
+    DJ = torch.prod(dxJ)
+
+    err2 =  torch.sum( (RphiI - J)**2  , 0)*W # make sure the error does not go on padding
+    E = c*torch.sum(err2 / (  err2 + c )  )*DJ
+
+    if not return_weights:
+        return E
+    else:
+        W = c**2 / ( (c + err2.clone().detach())**2 )*W # make sure weight is 0
+        # note: we do not include pixel size d here because it will get multiplied by d later
+        # no gradient calculations here
+        # note, if c is really big, this goes to 0
+        # and if c is really small, this looks like c/err2**2, and so also goes to 0
+        return E, W
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax = plt.subplots()
+ax.imshow(W[W.shape[0]//2],interpolation=&#39;none&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>RphiI = transform_image(xI,I,xv,vnew,Anew,xJ)
+# draw it
+fig,ax = plt.subplots()
+ax.imshow(RphiI[:,:,RphiI.shape[2]//2].permute(1,2,0),aspect=&#39;auto&#39;,interpolation=&#39;none&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>c = 0.5
+L,WR = robust_loss(RphiI,xJ,J,W,c, return_weights=True)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax = plt.subplots()
+ax.imshow(WR[WR.shape[0]//2])
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Update-atlas">
+<h1>Update atlas<a class="headerlink" href="#Update-atlas" title="Link to this heading">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def atlas_from_aligned_slices_and_weights(xI,I,phiiRiJ,W,asquare,niter=10,draw=0,fig=None,hfig=None):
+    &#39;&#39;&#39;
+    Inputs are 3D pixel locations. xI
+
+    Initial guess of atlas I.
+
+    We previously calculated RphiI, and we need the oppose. We need phiiRiJ
+
+    a coefficient in front of laplacian.  This has units of length, so we have asquare \Delta
+
+    we want to minimize
+
+    note, W needs to include determinant of jacobians
+
+    \int \|I - phiiRiJ\|**2 W dx + \int |L  I|**2 dx
+
+    Here L will be a negative laplacian
+
+    &#39;&#39;&#39;
+
+    if draw:
+        if fig is None:
+            fig = plt.figure()
+        if hfig is None:
+            hfig = display(fig,display_id=True)
+
+    # we don&#39;t want to propagate gradients here
+    phiiRiJ = phiiRiJ.clone().detach()
+    I = I.clone().detach()
+    W = W.clone().detach()
+
+
+
+    # normalize W
+    Wm = torch.max(W)
+    Wn = W/Wm
+
+     # make a Fourier domain
+    n = len(xI[0])
+    dI = torch.stack([x[1] - x[0] for x in xI])
+    DI = torch.prod(dI)
+    #d = dI[0]
+    # we use the convention that slices are one unit apart
+    d=1
+    f = torch.arange(n,dtype=dtype,device=device)/n/d
+
+
+
+
+    # define the operator in the fourier domain
+    # LL plus identity
+    L = (2.0*asquare* (1-torch.cos(2.0*np.pi*f*d))/d**2)
+    LL = L**2
+    LLnorm=LL/Wm
+    oooperator = 1.0 / (1.0 + LLnorm)
+    Esave = []
+
+
+    ERsave = []
+    EMsave = []
+    Esave = []
+    for it in range(niter):
+        # value of the loss
+        ER = torch.sum( torch.fft.ifftn( torch.fft.fftn(I,dim=1)*L[...,None,None] , dim=1).real**2 )*DI
+        #print(&#39;Ishape is&#39;,I.shape)
+        #print(&#39;phiiRiJ shape is&#39;,phiiRiJ.shape)
+        #print(&#39;W shape is&#39;,W.shape)
+        #EMM = torch.sum(  (I - phiiRiJ)**2 * W )/2*DI*Wm
+        #EM = torch.sum(   ((I-phiiRiJ)**2/(c + (I-phiiRiJ)**2))   )*DI # middle term of 2.12
+        EM = torch.sum( (I-phiiRiJ)**2*W)*DI # daniel changed this
+        E = ER + EM
+        Esave.append(E.item())
+        ERsave.append(ER.item())
+        EMsave.append(EM.item())
+
+        # update
+        toblur = ( phiiRiJ*Wn + I*(1-Wn) )
+        blurred = torch.fft.ifftn(torch.fft.fftn(toblur,dim=1)*oooperator[...,None,None],dim=1).real
+        I = blurred
+
+        if draw and (not it%draw or it == niter-1):
+            fig.clf()
+            ax = fig.add_subplot(2,3,1)
+            ax.imshow(I[:,I.shape[1]//2].permute(1,2,0))
+            ax = fig.add_subplot(2,3,2)
+            ax.imshow(I[:,:,I.shape[2]//2].permute(1,2,0),interpolation=&#39;none&#39;,aspect=&#39;auto&#39;)
+            ax = fig.add_subplot(2,3,3)
+            ax.imshow(I[:,:,:,I.shape[3]//2].permute(1,2,0),interpolation=&#39;none&#39;,aspect=&#39;auto&#39;)
+
+            ax = fig.add_subplot(2,3,4)
+            ax.imshow(phiiRiJ[:,I.shape[1]//2].permute(1,2,0))
+            ax = fig.add_subplot(2,3,5)
+            ax.imshow(phiiRiJ[:,:,I.shape[2]//2].permute(1,2,0),interpolation=&#39;none&#39;,aspect=&#39;auto&#39;)
+            ax = fig.add_subplot(2,3,6)
+            ax.imshow(phiiRiJ[:,:,:,I.shape[3]//2].permute(1,2,0),interpolation=&#39;none&#39;,aspect=&#39;auto&#39;)
+            hfig.update(fig)
+
+
+    return I,E.item(),ER.item()
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># andrew use this version because it does 3D blur, instead of 1d blur
+# but keep the other one somewhere and give it a modified name (like underscore at the end)
+def atlas_from_aligned_slices_and_weights(xI,I,phiiRiJ,W,asquare,niter=10,draw=0,fig=None,hfig=None,anisotropy_factor=4**2,return_K=False,return_fwhm=False):
+    &#39;&#39;&#39;
+    Inputs are 3D pixel locations. xI
+
+    Initial guess of atlas I.
+
+    We previously calculated RphiI, and we need the oppose. We need phiiRiJ
+
+    a coefficient in front of laplacian.  This has units of length, so we have asquare \Delta
+
+    we want to minimize
+
+    note, W needs to include determinant of jacobians
+
+    \int \|I - phiiRiJ\|**2 W dx + \int |L  I|**2 dx
+
+    Here L will be a negative laplacian
+
+    In this version we do bluring in 3D
+
+    TODO
+    ----
+
+    &#39;&#39;&#39;
+
+    if draw:
+        if fig is None:
+            fig = plt.figure()
+        if hfig is None:
+            hfig = display(fig,display_id=True)
+
+    # we don&#39;t want to propagate gradients here
+    phiiRiJ = phiiRiJ.clone().detach()
+    I = I.clone().detach()
+    W = W.clone().detach()
+
+
+
+    # normalize W
+    Wm = torch.max(W)
+    Wn = W/Wm
+
+     # make a Fourier domain
+    n = len(xI[0])
+    dI = torch.stack([x[1] - x[0] for x in xI])
+    DI = torch.prod(dI)
+    #d = dI[0]
+    # we use the convention that slices are one unit apart
+    d=1
+    #f = torch.arange(n,dtype=dtype,device=device)/n/d
+
+    # try here to blur in 3D
+    f = [torch.arange(ni,dtype=dtype,device=device)/ni/di for ni,di in zip(I.shape[1:],dI)]
+    F = torch.stack(torch.meshgrid(*f,indexing=&#39;ij&#39;),-1)
+
+
+    # define the operator in the fourier domain
+    # LL plus identity
+    #L = (2.0*asquare* (1-torch.cos(2.0*np.pi*f*d))/d**2)
+    asquare3d = torch.tensor([asquare,asquare*anisotropy_factor,asquare*anisotropy_factor],device=device,dtype=dtype)
+    L = 2.0* torch.sum( asquare3d*(1-torch.cos(2.0*np.pi*F*dI))/dI**2,-1)
+    LL = L**2
+    LLnorm=LL/Wm
+    oooperator = 1.0 / (1.0 + LLnorm)
+    # for FWHM computation, let&#39;s take the inverse fourier transform
+    if return_fwhm or return_K:
+        K = torch.fft.ifftn(oooperator).real
+
+    Esave = []
+
+
+    ERsave = []
+    EMsave = []
+    Esave = []
+    for it in range(niter):
+        # value of the loss
+        #ER = torch.sum( torch.fft.ifftn( torch.fft.fftn(I,dim=1)*L[...,None,None] , dim=1).real**2 )*DI
+        ER = torch.sum( torch.fft.ifftn( torch.fft.fftn(I,dim=(1,2,3))*L , dim=(1,2,3)).real**2 )*DI
+        #print(&#39;Ishape is&#39;,I.shape)
+        #print(&#39;phiiRiJ shape is&#39;,phiiRiJ.shape)
+        #print(&#39;W shape is&#39;,W.shape)
+        #EMM = torch.sum(  (I - phiiRiJ)**2 * W )/2*DI*Wm
+        #EM = torch.sum(   ((I-phiiRiJ)**2/(c + (I-phiiRiJ)**2))   )*DI # middle term of 2.12
+        EM = torch.sum( (I-phiiRiJ)**2*W)*DI # daniel changed this
+        E = ER + EM
+        Esave.append(E.item())
+        ERsave.append(ER.item())
+        EMsave.append(EM.item())
+
+        # update
+        toblur = ( phiiRiJ*Wn + I*(1-Wn) )
+        blurred = torch.fft.ifftn(torch.fft.fftn(toblur,dim=(1,2,3))*oooperator,dim=(1,2,3)).real
+        I = blurred
+
+        if draw and (not it%draw or it == niter-1):
+            fig.clf()
+            ax = fig.add_subplot(2,3,1)
+            ax.imshow(I[:,I.shape[1]//2].permute(1,2,0))
+            ax = fig.add_subplot(2,3,2)
+            ax.imshow(I[:,:,I.shape[2]//2].permute(1,2,0),interpolation=&#39;none&#39;,aspect=&#39;auto&#39;)
+            ax = fig.add_subplot(2,3,3)
+            ax.imshow(I[:,:,:,I.shape[3]//2].permute(1,2,0),interpolation=&#39;none&#39;,aspect=&#39;auto&#39;)
+
+            ax = fig.add_subplot(2,3,4)
+            ax.imshow(phiiRiJ[:,I.shape[1]//2].permute(1,2,0))
+            ax = fig.add_subplot(2,3,5)
+            ax.imshow(phiiRiJ[:,:,I.shape[2]//2].permute(1,2,0),interpolation=&#39;none&#39;,aspect=&#39;auto&#39;)
+            ax = fig.add_subplot(2,3,6)
+            ax.imshow(phiiRiJ[:,:,:,I.shape[3]//2].permute(1,2,0),interpolation=&#39;none&#39;,aspect=&#39;auto&#39;)
+            hfig.update(fig)
+
+    if return_K:
+        return K
+    elif return_fwhm:
+
+        half_width_half_max = np.where(K[:,0,0].numpy()&lt;0.5*K[0,0,0].numpy())[0][0]
+        full_width_half_max_0 = 2*half_width_half_max+1
+        half_width_half_max = np.where(K[0,:,0].numpy()&lt;0.5*K[0,0,0].numpy())[0][0]
+        full_width_half_max_1 = 2*half_width_half_max+1
+        half_width_half_max = np.where(K[0,0,:].numpy()&lt;0.5*K[0,0,0].numpy())[0][0]
+        full_width_half_max_2 = 2*half_width_half_max+1
+
+        return full_width_half_max_0,full_width_half_max_1,full_width_half_max_2
+    else: # normal returns
+        return I,E.item(),ER.item()
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># get phiiRiJ
+phiiRiJ = inverse_transform_image(xJ,J,xv,vnew,Anew,xI,padding_mode=&#39;border&#39;)
+phiiRiW = inverse_transform_image(xJ,W[None]*WR,xv,vnew,Anew,xI,padding_mode=&#39;zeros&#39;,mode=&#39;nearest&#39;)[0]
+XI = torch.stack(torch.meshgrid(xI,indexing=&#39;ij&#39;),-1)
+Wdetjacs = interp(xv,Wdetjac[None],XI)[0]
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax = plt.subplots()
+ax.imshow((phiiRiJ)[:,I.shape[1]//2].permute(1,2,0))
+fig,ax = plt.subplots()
+ax.imshow((phiiRiW)[I.shape[1]//2])
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>Inew = I.clone()
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>asquare = 2.0**2
+anisotropy_factor = 1.0
+Inew,Eat,ERat = atlas_from_aligned_slices_and_weights(xI,Inew*0,phiiRiJ,phiiRiW*Wdetjacs,asquare,niter=2,draw=True,anisotropy_factor=anisotropy_factor)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax = plt.subplots()
+ax.imshow(Inew[:,I.shape[1]//2].permute(1,2,0))
+fig,ax = plt.subplots()
+ax.imshow(Inew[:,:,I.shape[2]//2].permute(1,2,0),aspect=&#39;auto&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># let&#39;s test the FWHM
+asquare = 3.5**2
+anisotropy_factor = 0.3**2
+fwhm = atlas_from_aligned_slices_and_weights(xI,Inew*0,phiiRiJ,phiiRiW*Wdetjacs,asquare,niter=2,draw=True,return_fwhm=True,anisotropy_factor=anisotropy_factor)
+print(fwhm)
+</pre></div>
+</div>
+</div>
+</section>
+<section id="now-all-the-parts-are-in-place,-need-to-set-up-the-big-algorithm">
+<h1>now all the parts are in place, need to set up the big algorithm<a class="headerlink" href="#now-all-the-parts-are-in-place,-need-to-set-up-the-big-algorithm" title="Link to this heading">¶</a></h1>
+<p>note for andrew. this big algorithm seems to not be wrapped in a function. It probably should be.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># input parameters
+# images
+# xJ, J, W
+# initial guess for atlas
+# xI, I
+# initial transforms
+# xv, v
+# A
+#
+<br/><br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># # in this cell I only run for one iteration with no registration
+# # but I do estimate the atlas
+# # Andrew: we don&#39;t need this cell, use the one below
+# niter_big_loop = 2
+# niter_reg = 1
+# niter_atlas = 50
+# asquare = 0.25**2
+# asquare0=0.25**2
+# asquare0 = 3.5**2
+# anisotropy_factor = 0.1**2
+
+# epT = 1e-2*2*2*0
+# epL = 1e-6*2*2*0
+# epv = 1e1*2
+# epv = 1e3
+# epv = 1e2*5
+# epv = 0
+# c = 1.0 # bigger c means less robustness
+# c = 2.0
+
+# sigmaM = 1.0 # this should always be 1
+# sigmaR = 1e5 # should be smaller
+# sigmaR = 1e4
+# sigmaR = 2e2
+# sigmaR = 5e2
+# a = 8.0 # was 10
+
+
+# fig_at,ax_at = plt.subplots(2,3)
+# ax_at = ax_at.ravel()
+# hfig_at = display(fig_at,display_id=True)
+
+# fig_at_estimate = plt.figure()
+# hfig_at_estimate = display(fig_at_estimate,display_id=True)
+# fig_reg = plt.figure()
+# hfig_reg = display(fig_reg,display_id=True)
+# fig_E,ax_E = plt.subplots(1,1)
+# if isinstance(ax_E,np.ndarray):
+#     ax_E = ax_E.ravel()
+# else:
+#     ax_E = [ax_E]
+# hfig_E = display(fig_E,display_id=True)
+# # we want xI bigger than xJ so ther are no boundary issues
+# bigger = 20
+# x2dI = [torch.arange(n+bigger,dtype=dtype)*down - (n+bigger-1)*down/2 for n in nJ[1:]]
+# xI = [torch.arange(nJ[0],dtype=dtype)-(nJ[0]-1)/2,x2dI[0],x2dI[1]]
+# XI = torch.stack(torch.meshgrid(xI,indexing=&#39;ij&#39;),-1)
+
+# # this is the loss we want to report, not WSEE loss
+# Esave = []
+# v = torch.zeros_like(v)
+# A = torch.eye(3)
+# A = A[None].repeat(nJ[0],1,1)
+
+
+# # initialize with mean
+# I = torch.zeros((J.shape[0],XI.shape[0],XI.shape[1],XI.shape[2])) + (torch.sum(J*W,dim=(1,2,3))/torch.sum(W,dim=(0,1,2)))[...,None,None,None]
+# # first get the loss and the weights, using current guesses
+# RphiI = transform_image(xI,I,xv,v,A,xJ)
+# rloss, W_robust_loss = robust_loss(RphiI,xJ,J,W,c, return_weights=True)
+
+# for it_big_loop in range(niter_big_loop):
+
+#     if it_big_loop == 0:
+#         asquare = 4.0**2*asquare0
+#     elif it_big_loop == 20:
+#         asquare = 2.0**2*asquare0
+#     elif it_big_loop == 40:
+#         asquare = 1.0**2*asquare0
+#     asquare = asquare0
+
+
+#     # now register, but wait until I&#39;ve estimated a reasonable atlas
+#     if it_big_loop &gt; 0:
+#         A,v,Eregistration,Ereg = weighted_see_registration(xI,I,xJ,J,W*W_robust_loss,xv,v,A,a,p,sigmaM,sigmaR,niter_reg,epT,epL,epv,draw=5,fig=fig_reg,hfig=hfig_reg)
+#     else:
+#         Ereg = 0.0
+#     # and we want to add Ereg to our loss
+
+#     # now get jacobians
+#     Wdetjac = detjac(xv,v)
+
+#     # now update atlas
+#     phiiRiJ = inverse_transform_image(xJ,J,xv,v,A,xI,padding_mode=&#39;border&#39;,mode=&#39;nearest&#39;)
+#     phiiRiW = inverse_transform_image(xJ,W[None]*W_robust_loss,xv,v,A,xI,padding_mode=&#39;zeros&#39;,mode=&#39;nearest&#39;)[0]
+#     Wdetjacs = interp(xv,Wdetjac[None],XI)[0]
+#     I,Eat,ERat = atlas_from_aligned_slices_and_weights(xI,I,phiiRiJ,phiiRiW*Wdetjacs,asquare,niter=niter_atlas,fig=fig_at_estimate,hfig=hfig_at_estimate,draw=True,anisotropy_factor=anisotropy_factor)
+#     # and we want to add ERat to the loss
+
+#     # get the loss and the weights, using current guesses
+#     RphiI = transform_image(xI,I,xv,v,A,xJ)
+#     rloss, W_robust_loss = robust_loss(RphiI,xJ,J,W,c, return_weights=True)
+#     # this is the loss we want to report, it&#39;s the loss with the current parameters
+
+#     ax_at[0].cla()
+#     ax_at[0].imshow(I[:,I.shape[1]//2].permute(1,2,0))
+#     ax_at[1].cla()
+#     ax_at[1].imshow(I[:,:,I.shape[2]//2].permute(1,2,0),aspect=&#39;auto&#39;,interpolation=&#39;none&#39;)
+#     ax_at[2].cla()
+#     ax_at[2].imshow(I[:,:,:,I.shape[3]//2].permute(1,2,0),aspect=&#39;auto&#39;,interpolation=&#39;none&#39;)
+
+
+#     Wshow = (phiiRiW*Wdetjacs)
+#     ax_at[3].cla()
+#     ax_at[3].imshow(Wshow[I.shape[1]//2])
+#     ax_at[4].cla()
+#     ax_at[4].imshow(Wshow[:,I.shape[2]//2],aspect=&#39;auto&#39;,interpolation=&#39;none&#39;)
+#     ax_at[5].cla()
+#     ax_at[5].imshow(Wshow[:,:,I.shape[3]//2],aspect=&#39;auto&#39;,interpolation=&#39;none&#39;)
+
+
+#     # is this the right error? yes I think so
+#     Esave.append([rloss.item()+Ereg+ERat,rloss.item(),Ereg,ERat])
+#     ax_E[0].cla()
+#     ax_E[0].plot(Esave)
+#     ax_E[0].legend([&#39;total&#39;, &#39;robust matching&#39;, &#39;registration reg&#39;, &#39;atlas reg&#39;])
+
+#     hfig_at.update(fig_at)
+#     hfig_E.update(fig_E)
+
+#     #print(rloss.item() + Ereg + ERat)
+
+#     fig_at_estimate.savefig(f&#39;atlas_{it_big_loop:06d}.png&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Isave = I # we had saved this for a comparison in the paper, not needed
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># this cell should be the main function
+niter_big_loop = 400
+niter_reg = 5
+niter_atlas = 5
+asquare = 0.25**2
+asquare0=0.25**2
+asquare0 = 3.5**2
+anisotropy_factor = 0.1**2
+
+epT = 1e-2*2*2*0
+epL = 1e-6*2*2*0
+epv = 1e1*2
+epv = 1e3
+epv = 1e2*5
+c = 1.0 # bigger c means less robustness
+c = 2.0
+
+sigmaM = 1.0 # this should always be 1
+sigmaR = 1e5 # should be smaller
+sigmaR = 1e4
+sigmaR = 2e2
+sigmaR = 5e2
+a = 8.0 # was 10
+a = 6.0
+
+
+fig_at,ax_at = plt.subplots(2,3)
+ax_at = ax_at.ravel()
+hfig_at = display(fig_at,display_id=True)
+
+fig_at_estimate = plt.figure()
+hfig_at_estimate = display(fig_at_estimate,display_id=True)
+fig_reg = plt.figure()
+hfig_reg = display(fig_reg,display_id=True)
+fig_E,ax_E = plt.subplots(1,1)
+if isinstance(ax_E,np.ndarray):
+    ax_E = ax_E.ravel()
+else:
+    ax_E = [ax_E]
+hfig_E = display(fig_E,display_id=True)
+# we want xI bigger than xJ so ther are no boundary issues
+bigger = 20
+x2dI = [torch.arange(n+bigger,dtype=dtype)*down - (n+bigger-1)*down/2 for n in nJ[1:]]
+xI = [torch.arange(nJ[0],dtype=dtype)-(nJ[0]-1)/2,x2dI[0],x2dI[1]]
+XI = torch.stack(torch.meshgrid(xI,indexing=&#39;ij&#39;),-1)
+
+# this is the loss we want to report, not WSEE loss
+Esave = []
+v = torch.zeros_like(v)
+A = torch.eye(3)
+A = A[None].repeat(nJ[0],1,1)
+
+
+# initialize with mean
+I = torch.zeros((J.shape[0],XI.shape[0],XI.shape[1],XI.shape[2])) + (torch.sum(J*W,dim=(1,2,3))/torch.sum(W,dim=(0,1,2)))[...,None,None,None]
+# first get the loss and the weights, using current guesses
+RphiI = transform_image(xI,I,xv,v,A,xJ)
+rloss, W_robust_loss = robust_loss(RphiI,xJ,J,W,c, return_weights=True)
+
+for it_big_loop in range(niter_big_loop):
+
+    if it_big_loop == 0:
+        asquare = 4.0**2*asquare0
+    elif it_big_loop == 20:
+        asquare = 2.0**2*asquare0
+    elif it_big_loop == 40:
+        asquare = 1.0**2*asquare0
+    asquare = asquare0
+
+
+    # now register, but wait until I&#39;ve estimated a reasonable atlas
+    if it_big_loop &gt; 0:
+        A,v,Eregistration,Ereg = weighted_see_registration(xI,I,xJ,J,W*W_robust_loss,xv,v,A,a,p,sigmaM,sigmaR,niter_reg,epT,epL,epv,draw=5,fig=fig_reg,hfig=hfig_reg)
+    else:
+        Ereg = 0.0
+    # and we want to add Ereg to our loss
+
+    # now get jacobians
+    Wdetjac = detjac(xv,v)
+
+    # now update atlas
+    phiiRiJ = inverse_transform_image(xJ,J,xv,v,A,xI,padding_mode=&#39;border&#39;,mode=&#39;nearest&#39;)
+    phiiRiW = inverse_transform_image(xJ,W[None]*W_robust_loss,xv,v,A,xI,padding_mode=&#39;zeros&#39;,mode=&#39;nearest&#39;)[0]
+    Wdetjacs = interp(xv,Wdetjac[None],XI)[0]
+    I,Eat,ERat = atlas_from_aligned_slices_and_weights(xI,I,phiiRiJ,phiiRiW*Wdetjacs,asquare,niter=niter_atlas,fig=fig_at_estimate,hfig=hfig_at_estimate,draw=True,anisotropy_factor=anisotropy_factor)
+    # and we want to add ERat to the loss
+
+    # get the loss and the weights, using current guesses
+    RphiI = transform_image(xI,I,xv,v,A,xJ)
+    rloss, W_robust_loss = robust_loss(RphiI,xJ,J,W,c, return_weights=True)
+    # this is the loss we want to report, it&#39;s the loss with the current parameters
+
+    ax_at[0].cla()
+    ax_at[0].imshow(I[:,I.shape[1]//2].permute(1,2,0))
+    ax_at[1].cla()
+    ax_at[1].imshow(I[:,:,I.shape[2]//2].permute(1,2,0),aspect=&#39;auto&#39;,interpolation=&#39;none&#39;)
+    ax_at[2].cla()
+    ax_at[2].imshow(I[:,:,:,I.shape[3]//2].permute(1,2,0),aspect=&#39;auto&#39;,interpolation=&#39;none&#39;)
+
+
+    Wshow = (phiiRiW*Wdetjacs)
+    ax_at[3].cla()
+    ax_at[3].imshow(Wshow[I.shape[1]//2])
+    ax_at[4].cla()
+    ax_at[4].imshow(Wshow[:,I.shape[2]//2],aspect=&#39;auto&#39;,interpolation=&#39;none&#39;)
+    ax_at[5].cla()
+    ax_at[5].imshow(Wshow[:,:,I.shape[3]//2],aspect=&#39;auto&#39;,interpolation=&#39;none&#39;)
+
+
+    # is this the right error? yes I think so
+    Esave.append([rloss.item()+Ereg+ERat,rloss.item(),Ereg,ERat])
+    ax_E[0].cla()
+    ax_E[0].plot(Esave)
+    ax_E[0].legend([&#39;total&#39;, &#39;robust matching&#39;, &#39;registration reg&#39;, &#39;atlas reg&#39;])
+
+    hfig_at.update(fig_at)
+    hfig_E.update(fig_E)
+
+    #print(rloss.item() + Ereg + ERat)
+
+    fig_at_estimate.savefig(f&#39;atlas_{it_big_loop:06d}.png&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># we will need to decide what the outputs are and how they are saved
+# I suggest just npy or npz files for everything
+#
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>asdf # end here
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>phiiRiJ = inverse_transform_image(xJ,J,xv,v,A,xI,padding_mode=&#39;border&#39;,mode=&#39;bilinear&#39;)
+phiiRiJ0 = inverse_transform_image(xJ,J,xv,v*0,A,xI,padding_mode=&#39;border&#39;,mode=&#39;bilinear&#39;)
+
+phiiRiJ = inverse_transform_image(xJ,J,xv,v,A,xI,padding_mode=&#39;border&#39;,mode=&#39;nearest&#39;)
+phiiRiJ0 = inverse_transform_image(xJ,J,xv,v*0,A,xI,padding_mode=&#39;border&#39;,mode=&#39;nearest&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>torch.max(torch.abs(phiiRiJ - phiiRiJ0))
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax = plt.subplots(2,2)
+ax = ax.ravel()
+phiiRiJ0_ = phiiRiJ0.mean((0,1))
+phiiRiJ_ = phiiRiJ.mean((0,1))
+ax[0].imshow(phiiRiJ0_)
+ax[1].imshow(phiiRiJ_)
+ax[2].plot(phiiRiJ0[0,phiiRiJ0.shape[1]//2,phiiRiJ0_.shape[0]//2],label=&#39;slice&#39;)
+ax[2].plot(phiiRiJ0_[phiiRiJ0_.shape[0]//2],label=&#39;init&#39;)
+ax[2].plot(phiiRiJ_[phiiRiJ_.shape[0]//2],label=&#39;final&#39;)
+ax[2].legend()
+ax[3].plot(phiiRiJ0[0,phiiRiJ0.shape[1]//2,:,phiiRiJ0_.shape[1]//2],label=&#39;slice&#39;)
+ax[3].plot(phiiRiJ0_[:,phiiRiJ0_.shape[1]//2],label=&#39;init&#39;)
+ax[3].plot(phiiRiJ_[:,phiiRiJ_.shape[1]//2],label=&#39;final&#39;)
+ax[3].legend()
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span>sl = (slice(10,-10),slice(10,-10))
+ps0 = np.mean(np.abs(np.fft.fftn(phiiRiJ0_[sl],axes=(-1,)))**2,-2)
+ps0 = ps0 - np.abs(np.mean(np.fft.fftn(phiiRiJ0_[sl],axes=(-1,)),-2))**2
+ps = np.mean(np.abs(np.fft.fftn(phiiRiJ_[sl],axes=(-1,)))**2,-2)
+ps = ps - np.abs(np.mean(np.fft.fftn(phiiRiJ_[sl],axes=(-1,)),-2))**2
+fig,ax = plt.subplots()
+ax.plot(np.fft.fftshift(ps0/ps0[0]),label=&#39;orig&#39;)
+ax.plot(np.fft.fftshift(ps/ps[0]),label=&#39;final&#39;)
+ax.legend()
+ax.set_yscale(&#39;log&#39;)
+
+
+
+sl = (slice(10,-10),slice(10,-10))
+ps0 = np.mean(np.abs(np.fft.fftn(phiiRiJ0_[sl],axes=(-2,)))**2,-1)
+ps0 = ps0 - np.abs(np.mean(np.fft.fftn(phiiRiJ0_[sl],axes=(-2,)),-1))**2
+ps = np.mean(np.abs(np.fft.fftn(phiiRiJ_[sl],axes=(-2,)))**2,-1)
+ps = ps - np.abs(np.mean(np.fft.fftn(phiiRiJ_[sl],axes=(-2,)),-1))**2
+fig,ax = plt.subplots()
+ax.plot(np.fft.fftshift(ps0/ps0[0]),label=&#39;orig&#39;)
+ax.plot(np.fft.fftshift(ps/ps[0]),label=&#39;final&#39;)
+ax.legend()
+ax.set_yscale(&#39;log&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xf
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>sl = (slice(10,-10),slice(10,-10))
+# 150 factors into
+# 2 5 5 3
+# note indices 1,3 get fftd
+reshape = (30,5,30,5)
+reshape = (25,6,25,6)
+reshape = (15,10,15,10)
+
+# let&#39;s break it it up into 10x10 arrays of 15x15
+tmp = phiiRiJ0_[sl].reshape(reshape)
+# now fft along the 15x15 axes
+tmphat = np.fft.fftn(tmp,axes=(1,3))
+ps0 = np.mean(np.abs(tmphat)**2,(0,2)) - np.abs(np.mean(tmphat,(0,2)))**2
+fig,ax = plt.subplots()
+ax.imshow(np.log(np.fft.fftshift(ps0/ps0[0,0])))
+
+
+tmp = phiiRiJ_[sl].reshape(reshape)
+# now fft along the 15x15 axes
+tmphat = np.fft.fftn(tmp,axes=(1,3))
+ps = np.mean(np.abs(tmphat)**2,(0,2)) - np.abs(np.mean(tmphat,(0,2)))**2
+fig,ax = plt.subplots()
+ax.imshow(np.log(np.fft.fftshift(ps/ps[0,0])))
+
+fig,ax = plt.subplots()
+toshow = np.fft.fftshift(np.log((ps/ps[0,0])/(ps0/ps0[0,0])))
+ax.imshow(toshow,clim=np.array([-1,1])*np.max(np.abs(toshow)))
+
+# what if we plot as a function of r
+xf = np.arange(toshow.shape[0])
+if len(xf)%2:
+    # odd
+    xf -= (len(xf)-1)//2
+else:
+    # even
+    xf -= (len(xf))//2
+R2 = np.sum(np.stack(np.meshgrid(xf,xf,indexing=&#39;ij&#39;))**2,0)
+rs,inds = np.unique(R2,return_inverse=True)
+tmp = phiiRiJ0_[sl].reshape(reshape)
+tmphat = np.fft.fftn(tmp,axes=(1,3))
+
+ps0_ = []
+for ri in rs:
+    mu2 = np.abs(np.mean(np.mean(np.fft.fftshift(tmphat),(0,2))[R2 == ri]) )**2
+    ss = np.mean(np.mean(np.abs(np.fft.fftshift(tmphat))**2,(0,2))[R2 == ri])
+    ps0_.append( ss - mu2)
+
+tmp = phiiRiJ_[sl].reshape(reshape)
+tmphat = np.fft.fftn(tmp,axes=(1,3))
+
+ps_ = []
+for ri in rs:
+    mu2 = np.abs(np.mean(np.mean(np.fft.fftshift(tmphat),(0,2))[R2 == ri]) )**2
+    ss = np.mean(np.mean(np.abs(np.fft.fftshift(tmphat))**2,(0,2))[R2 == ri])
+    ps_.append( ss - mu2)
+
+fig,ax = plt.subplots()
+ax.plot(np.sqrt(rs),ps0_)
+ax.plot(np.sqrt(rs),ps_)
+ax.set_yscale(&#39;log&#39;)
+
+fig,ax = plt.subplots()
+ax.plot(np.sqrt(rs),np.array(ps_)/np.array(ps0_))
+ax.set_yscale(&#39;log&#39;)
+<br/><br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>ps0_
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>tmphat.shape
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>xf**2
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>rs[inds].reshape(R2.shape)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax = plt.subplots()
+ax.imshow(phiiRiJ[0,phiiRiJ.shape[1]//2])
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># there is a remaining artifact I believe
+# where the images have some edge effect
+# maybe where they are next to black bu tweights are not quite right
+# i remove this by doing nearest interpolation
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>phiiRiJ.shape
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax = plt.subplots()
+ind = 10
+ax.imshow( J[:,ind].permute(1,2,0) +  W[ind,...,None]*torch.tensor([1,0,0],dtype=dtype))
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>W_robust_loss.ravel()
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax = plt.subplots()
+ax.hist(W_robust_loss.ravel().numpy())
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>phiiRiW.requires_grad,Wdetjacs.requires_grad,Wdetjac.requires_grad,v.requires_grad,XI.requires_grad
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>v.requires_grad
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>Wdetjac = detjac(xv,v)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>plot0=plt.imshow(torch.mean(torch.mean(J,dim=1),dim=0))
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>averageofJ=torch.mean(torch.mean(cropRiJ,dim=1),dim=0)
+averageofI=torch.mean(torch.mean(cropI,dim=1),dim=0)
+plot1=plt.imshow(averageofJ)
+plt.show()
+plot2=plt.imshow(averageofI)
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>Average=torch.mean(torch.mean(J,dim=1),dim=0)
+grad=torch.sum(torch.gradient(Average)[0]**2+torch.gradient(Average)[1]**2)
+gradphiJ=torch.sum(torch.gradient(averageofJ)[0]**2+torch.gradient(averageofJ)[1]**2)
+gradI=torch.sum(torch.gradient(averageofI)[0]**2+torch.gradient(averageofI)[1]**2)
+print(grad)
+print(gradphiJ)
+print(gradI)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>gy, gx = torch.gradient(averageofI)
+gnorm = torch.sqrt(gx**2 + gy**2)
+sharpness = torch.mean(gnorm)
+gy1, gx1 = np.gradient(Average)
+gnorm1 = np.sqrt(gx1**2 + gy1**2)
+sharpnessA = np.average(gnorm1)
+gy2, gx2 = np.gradient(averageofJ)
+gnorm2 = np.sqrt(gx2**2 + gy2**2)
+sharpness2 = np.average(gnorm2)
+print(sharpnessA)
+print(sharpness)
+print(sharpness2)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>plot1=plt.imshow(J[0,I.shape[1]//2,:,:])
+plt.show()
+plot2=plt.imshow(J[0,:,I.shape[2]//2])
+plt.show()
+plot3=plt.imshow(J[0,:,:,I.shape[3]//2])
+plt.show()
+plot4=plt.imshow(I[0,I.shape[1]//2,:,:])
+plt.show()
+plot5=plt.imshow(I[0,:,I.shape[2]//2])
+plt.show()
+plot6=plt.imshow(I[0,:,:,I.shape[3]//2])
+plt.show()
+plot7=plt.imshow(Wshow[I.shape[1]//2])
+plt.show()
+plot8=plt.imshow(Wshow[:,I.shape[2]//2])
+plt.show()
+plot9=plt.imshow(Wshow[:,:,I.shape[3]//2])
+plt.show()
+plot10=plt.imshow(phiiRiJ[0,I.shape[1]//2])
+plt.show()
+plot11=plt.imshow(phiiRiJ[0,:,I.shape[2]//2])
+plt.show()
+plot12=plt.imshow(phiiRiJ[0,:,:,I.shape[3]//2])
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cropI=I[:,:,10:160, 10:160].clone().detach()
+cropW=Wshow[:,10:160, 10:160].clone().detach()
+cropRiJ=phiiRiJ[:,:,10:160, 10:160].clone().detach()
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax=plt.subplot_mosaic([[&#39;left&#39;, &#39;upper right&#39;],
+                     [&#39;left&#39;, &#39;lower right&#39;]],
+                              figsize=(5.5, 2.75), layout=&quot;constrained&quot;)
+
+
+
+ax[&#39;left&#39;].set_title(&#39;x-y plane view&#39; )
+ax[&#39;left&#39;].imshow(cropI[0,J.shape[1]//2,:,:], aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+
+
+
+ax[&#39;upper right&#39;].set_title(&#39;y-x plane view&#39;)
+ax[&#39;upper right&#39;].imshow(cropI[0,:,J.shape[2]//2], aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+
+
+ax[&#39;lower right&#39;].set_title(&#39;x-z plane view&#39;)
+ax[&#39;lower right&#39;].imshow(cropI[0,:,:,J.shape[3]//2], aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax=plt.subplot_mosaic([[&#39;left&#39;, &#39;upper right&#39;],
+                     [&#39;left&#39;, &#39;lower right&#39;]],
+                              figsize=(5.5, 2.75), layout=&quot;constrained&quot;)
+
+
+
+ax[&#39;left&#39;].set_title(&#39;x-y plane view&#39; )
+ax[&#39;left&#39;].imshow(cropW[J.shape[1]//2], aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+
+
+
+ax[&#39;upper right&#39;].set_title(&#39;y-x plane view&#39;)
+ax[&#39;upper right&#39;].imshow(cropW[:,J.shape[2]//2], aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+
+
+ax[&#39;lower right&#39;].set_title(&#39;x-z plane view&#39;)
+ax[&#39;lower right&#39;].imshow(cropW[:,:,J.shape[3]//2], aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax=plt.subplot_mosaic([[&#39;left&#39;, &#39;upper right&#39;],
+                     [&#39;left&#39;, &#39;lower right&#39;]],
+                              figsize=(5.5, 2.75), layout=&quot;constrained&quot;)
+
+
+
+ax[&#39;left&#39;].set_title(&#39;x-y plane view&#39; )
+ax[&#39;left&#39;].imshow(cropRiJ[0,J.shape[1]//2,:,:], aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+
+
+
+ax[&#39;upper right&#39;].set_title(&#39;y-x plane view&#39;)
+ax[&#39;upper right&#39;].imshow(cropRiJ[0,:,J.shape[2]//2], aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+
+
+ax[&#39;lower right&#39;].set_title(&#39;x-z plane view&#39;)
+ax[&#39;lower right&#39;].imshow(cropRiJ[0,:,:,J.shape[3]//2], aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Goal</a></li>
+<li><a class="reference internal" href="#for-andrew">for andrew</a></li>
+<li><a class="reference internal" href="#Helper-functions">Helper functions</a></li>
+<li><a class="reference internal" href="#Get-some-files">Get some files</a></li>
+<li><a class="reference internal" href="#Convert-to-pytorch">Convert to pytorch</a></li>
+<li><a class="reference internal" href="#Interpolation">Interpolation</a></li>
+<li><a class="reference internal" href="#Group-exponential">Group exponential</a></li>
+<li><a class="reference internal" href="#Weighted-SSE-registration">Weighted SSE registration</a></li>
+<li><a class="reference internal" href="#Get-Jacobian-weights">Get Jacobian weights</a></li>
+<li><a class="reference internal" href="#Get-robustness-loss-and-weights">Get robustness loss and weights</a></li>
+<li><a class="reference internal" href="#Update-atlas">Update atlas</a></li>
+<li><a class="reference internal" href="#now-all-the-parts-are-in-place,-need-to-set-up-the-big-algorithm">now all the parts are in place, need to set up the big algorithm</a></li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/notebooks/slice_alignment_parallel Telescope a=0.25 c=0.25 deform only-Copy1.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">atlas_free_slice_alignment  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Goal</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2026, Daniel Tward, Andrew Bennecke, Gary Zhou.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

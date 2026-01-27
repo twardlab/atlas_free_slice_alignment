@@ -17,6 +17,7 @@
     <script src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="notebooks/example.html" />
     <link rel="prev" title="Atlas Free Slice Alignment Pipeline" href="slice_alignment.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <!--[if lt IE 9]>
@@ -32,6 +33,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="notebooks/example.html" title="&lt;no title&gt;"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="slice_alignment.html" title="Atlas Free Slice Alignment Pipeline"
              accesskey="P">previous</a> |</li>
@@ -180,10 +184,10 @@
 <p>a coefficient in front of laplacian.  This has units of length, so we have asquare Delta</p>
 <p>we want to minimize</p>
 <p>note, W needs to include determinant of jacobians</p>
-<p>int |I - phiiRiJ|**2 W dx + int <a href="#id7"><span class="problematic" id="id8">|</span></a>L  I|**2 dx</p>
+<p>int |I - phiiRiJ|**2 W dx + int |L  I|**2 dx</p>
 <p>Here L will be a negative laplacian</p>
-<section id="id9">
-<h2>Parameters:<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h2>
+<section id="id7">
+<h2>Parameters:<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>xI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -205,8 +209,8 @@
 </dd>
 </dl>
 </section>
-<section id="id10">
-<h2>Returns:<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h2>
+<section id="id8">
+<h2>Returns:<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>I<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -222,8 +226,8 @@
 <dt class="sig sig-object py" id="slice_alignment_help.detjac">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">detjac</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#detjac"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.detjac" title="Link to this definition">¶</a></dt>
 <dd><p>TODO - Function description</p>
-<section id="id11">
-<h2>Parameters:<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h2>
+<section id="id9">
+<h2>Parameters:<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>xv<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -231,8 +235,8 @@
 </dd>
 </dl>
 </section>
-<section id="id12">
-<h2>Returns:<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h2>
+<section id="id10">
+<h2>Returns:<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>detjac<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -244,8 +248,8 @@
 <dt class="sig sig-object py" id="slice_alignment_help.down2ax">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">down2ax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#down2ax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.down2ax" title="Link to this definition">¶</a></dt>
 <dd><p>TODO - Function description</p>
-<section id="id13">
-<h2>Parameters:<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h2>
+<section id="id11">
+<h2>Parameters:<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>I<span class="classifier">nd-array</span></dt><dd><p>TODO</p>
 </dd>
@@ -253,8 +257,8 @@
 </dd>
 </dl>
 </section>
-<section id="id14">
-<h2>Returns:<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h2>
+<section id="id12">
+<h2>Returns:<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>Id<span class="classifier">nd-array</span></dt><dd><p>TODO</p>
 </dd>
@@ -272,8 +276,8 @@ many times, to give a big displacement.</p>
 <p>If N = 1, the output is id + v</p>
 <p>If N = 2, the output is (id + v/2)circ (id + v/2)</p>
 <p>If N = 3, the output is (id + v/8)circ … circ (id + v/8)</p>
-<section id="id15">
-<h2>Parameters:<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h2>
+<section id="id13">
+<h2>Parameters:<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>x<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -283,8 +287,8 @@ many times, to give a big displacement.</p>
 </dd>
 </dl>
 </section>
-<section id="id16">
-<h2>Returns:<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h2>
+<section id="id14">
+<h2>Returns:<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>phi<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -296,15 +300,15 @@ many times, to give a big displacement.</p>
 <dt class="sig sig-object py" id="slice_alignment_help.extent_from_x">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">extent_from_x</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#extent_from_x"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.extent_from_x" title="Link to this definition">¶</a></dt>
 <dd><p>This function gets a coordinate system and output the extent argument for matplotlib imshow</p>
-<section id="id17">
-<h2>Parameters:<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h2>
+<section id="id15">
+<h2>Parameters:<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>x<span class="classifier">arr[int]</span></dt><dd><p>An N-dimensional coordinate system</p>
 </dd>
 </dl>
 </section>
-<section id="id18">
-<h2>Returns:<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h2>
+<section id="id16">
+<h2>Returns:<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>out<span class="classifier">arr</span></dt><dd><p>The extent of x to be used as an input for matplotlib.pyplot.imshow()</p>
 </dd>
@@ -316,8 +320,8 @@ many times, to give a big displacement.</p>
 <dt class="sig sig-object py" id="slice_alignment_help.interp">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phii</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#interp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.interp" title="Link to this definition">¶</a></dt>
 <dd><p>Interpolate a signal with specified voxel spacing, in torch. Note, the input data should be 3D images, with first dimension a channel. phii has xyz on the last dimension.</p>
-<section id="id19">
-<h2>Parameters:<a class="headerlink" href="#id19" title="Link to this heading">¶</a></h2>
+<section id="id17">
+<h2>Parameters:<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>x<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -329,8 +333,8 @@ many times, to give a big displacement.</p>
 </dd>
 </dl>
 </section>
-<section id="id20">
-<h2>Returns:<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h2>
+<section id="id18">
+<h2>Returns:<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>phiI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -342,8 +346,8 @@ many times, to give a big displacement.</p>
 <dt class="sig sig-object py" id="slice_alignment_help.inverse_transform_image">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">inverse_transform_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xJ</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#inverse_transform_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.inverse_transform_image" title="Link to this definition">¶</a></dt>
 <dd><p>Note this is redundant with the below, but is a nice helper function</p>
-<section id="id21">
-<h2>Parameters:<a class="headerlink" href="#id21" title="Link to this heading">¶</a></h2>
+<section id="id19">
+<h2>Parameters:<a class="headerlink" href="#id19" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>xI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -361,8 +365,8 @@ many times, to give a big displacement.</p>
 </dd>
 </dl>
 </section>
-<section id="id22">
-<h2>Returns:<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h2>
+<section id="id20">
+<h2>Returns:<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>phiiAiI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -375,8 +379,8 @@ many times, to give a big displacement.</p>
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">robust_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">RphiI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xJ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">J</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#robust_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.robust_loss" title="Link to this definition">¶</a></dt>
 <dd><p>We input the deformed atlas I, the target J, and the voxel coordinates of J, and the robust constant c
 note there is a W here which should be binary because we’re not going to sum over all the pixels</p>
-<section id="id23">
-<h2>Parameters:<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h2>
+<section id="id21">
+<h2>Parameters:<a class="headerlink" href="#id21" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>RphiI<span class="classifier">TODO</span></dt><dd><p>TOOD</p>
 </dd>
@@ -392,8 +396,8 @@ note there is a W here which should be binary because we’re not going to sum o
 </dd>
 </dl>
 </section>
-<section id="id24">
-<h2>Returns:<a class="headerlink" href="#id24" title="Link to this heading">¶</a></h2>
+<section id="id22">
+<h2>Returns:<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>E<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -407,8 +411,8 @@ note there is a W here which should be binary because we’re not going to sum o
 <dt class="sig sig-object py" id="slice_alignment_help.transform_image">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">transform_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xJ</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#transform_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.transform_image" title="Link to this definition">¶</a></dt>
 <dd><p>Note this is redundant with the below, but is a nice helper function</p>
-<section id="id25">
-<h2>Parameters:<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h2>
+<section id="id23">
+<h2>Parameters:<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>xI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -426,8 +430,8 @@ note there is a W here which should be binary because we’re not going to sum o
 </dd>
 </dl>
 </section>
-<section id="id26">
-<h2>Returns:<a class="headerlink" href="#id26" title="Link to this heading">¶</a></h2>
+<section id="id24">
+<h2>Returns:<a class="headerlink" href="#id24" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>AphiI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -439,15 +443,15 @@ note there is a W here which should be binary because we’re not going to sum o
 <dt class="sig sig-object py" id="slice_alignment_help.v2DToV3D">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">v2DToV3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v2d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#v2DToV3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.v2DToV3D" title="Link to this definition">¶</a></dt>
 <dd><p>TOOD - Function description</p>
-<section id="id27">
-<h2>Parameters:<a class="headerlink" href="#id27" title="Link to this heading">¶</a></h2>
+<section id="id25">
+<h2>Parameters:<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>v2d<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
-<section id="id28">
-<h2>Returns:<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h2>
+<section id="id26">
+<h2>Returns:<a class="headerlink" href="#id26" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>out<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -459,8 +463,8 @@ note there is a W here which should be binary because we’re not going to sum o
 <dt class="sig sig-object py" id="slice_alignment_help.weighted_see_registration">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">weighted_see_registration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xJ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">J</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hfig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#weighted_see_registration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.weighted_see_registration" title="Link to this definition">¶</a></dt>
 <dd><p>TODO - Function description</p>
-<section id="id29">
-<h2>Parameters:<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h2>
+<section id="id27">
+<h2>Parameters:<a class="headerlink" href="#id27" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>xI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -502,8 +506,8 @@ note there is a W here which should be binary because we’re not going to sum o
 </dd>
 </dl>
 </section>
-<section id="id30">
-<h2>Returns:<a class="headerlink" href="#id30" title="Link to this heading">¶</a></h2>
+<section id="id28">
+<h2>Returns:<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>A<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -521,8 +525,8 @@ note there is a W here which should be binary because we’re not going to sum o
 <dt class="sig sig-object py" id="slice_alignment_help.x_from_n_d">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">x_from_n_d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#x_from_n_d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.x_from_n_d" title="Link to this definition">¶</a></dt>
 <dd><p>This function takes in an image size and pixel size, and outputs a zero centered coordinate system</p>
-<section id="id31">
-<h2>Parameters:<a class="headerlink" href="#id31" title="Link to this heading">¶</a></h2>
+<section id="id29">
+<h2>Parameters:<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>n<span class="classifier">int or arr[int]</span></dt><dd><p>The image size along each axis</p>
 </dd>
@@ -530,8 +534,8 @@ note there is a W here which should be binary because we’re not going to sum o
 </dd>
 </dl>
 </section>
-<section id="id32">
-<h2>Returns:<a class="headerlink" href="#id32" title="Link to this heading">¶</a></h2>
+<section id="id30">
+<h2>Returns:<a class="headerlink" href="#id30" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>x<span class="classifier">arr</span></dt><dd><p>The zero-centered coordinate system for an image of size ‘n’ with pixel size ‘d’</p>
 </dd>
@@ -578,6 +582,11 @@ note there is a W here which should be binary because we’re not going to sum o
     <p class="topless"><a href="slice_alignment.html"
                           title="previous chapter">Atlas Free Slice Alignment Pipeline</a></p>
   </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="notebooks/example.html"
+                          title="next chapter">&lt;no title&gt;</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -608,6 +617,9 @@ note there is a W here which should be binary because we’re not going to sum o
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="notebooks/example.html" title="&lt;no title&gt;"
+             >next</a> |</li>
         <li class="right" >
           <a href="slice_alignment.html" title="Atlas Free Slice Alignment Pipeline"
              >previous</a> |</li>
