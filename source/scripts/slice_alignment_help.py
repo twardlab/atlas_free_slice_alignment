@@ -20,7 +20,7 @@ def atlas_from_aligned_slices_and_weights(xI,I,dtype,device,phiiRiJ,W,asquare,ni
     
     note, W needs to include determinant of jacobians
     
-    \int \|I - phiiRiJ\|**2 W dx + \int |L  I|**2 dx
+    \int \|I - phiiRiJ\|**2 W dx + \int \|L  I\|**2 dx
     
     Here L will be a negative laplacian
     
