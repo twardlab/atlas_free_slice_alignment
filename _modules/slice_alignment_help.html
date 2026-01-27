@@ -1,0 +1,963 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>slice_alignment_help &#8212; atlas_free_slice_alignment  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css?v=5283bb3d" />
+    
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">atlas_free_slice_alignment  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">slice_alignment_help</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for slice_alignment_help</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">glob</span><span class="w"> </span><span class="kn">import</span> <span class="n">glob</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">join</span><span class="p">,</span><span class="n">basename</span><span class="p">,</span><span class="n">splitext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.interpolate</span><span class="w"> </span><span class="kn">import</span> <span class="n">interpn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+
+<div class="viewcode-block" id="atlas_from_aligned_slices_and_weights">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.atlas_from_aligned_slices_and_weights">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">atlas_from_aligned_slices_and_weights</span><span class="p">(</span><span class="n">xI</span><span class="p">,</span><span class="n">I</span><span class="p">,</span><span class="n">dtype</span><span class="p">,</span><span class="n">device</span><span class="p">,</span><span class="n">phiiRiJ</span><span class="p">,</span><span class="n">W</span><span class="p">,</span><span class="n">asquare</span><span class="p">,</span><span class="n">niter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">draw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">fig</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">hfig</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">anisotropy_factor</span><span class="o">=</span><span class="mi">4</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">return_K</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">return_fwhm</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Inputs are 3D pixel locations. xI</span>
+<span class="sd">    </span>
+<span class="sd">    Initial guess of atlas I.</span>
+<span class="sd">    </span>
+<span class="sd">    We previously calculated RphiI, and we need the oppose. We need phiiRiJ</span>
+<span class="sd">    </span>
+<span class="sd">    a coefficient in front of laplacian.  This has units of length, so we have asquare \Delta</span>
+<span class="sd">    </span>
+<span class="sd">    we want to minimize</span>
+<span class="sd">    </span>
+<span class="sd">    note, W needs to include determinant of jacobians</span>
+<span class="sd">    </span>
+<span class="sd">    \int \|I - phiiRiJ\|**2 W dx + \int |L  I|**2 dx</span>
+<span class="sd">    </span>
+<span class="sd">    Here L will be a negative laplacian</span>
+<span class="sd">    </span>
+<span class="sd">    In this version we do bluring in 3D</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    xI : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    I : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    phiiRiJ : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    W : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    asquare : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    niter : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    draw : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    fig : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    hfig :  TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    anisotropy_factor : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    return_K : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    return_fwhm : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    dtype : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    device : TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    I : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    E : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    ER : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="n">draw</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">fig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">hfig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">hfig</span> <span class="o">=</span> <span class="n">display</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span><span class="n">display_id</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="c1"># we don&#39;t want to propagate gradients here</span>
+    <span class="n">phiiRiJ</span> <span class="o">=</span> <span class="n">phiiRiJ</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>    
+    <span class="n">W</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+    
+    
+    
+    <span class="c1"># normalize W</span>
+    <span class="n">Wm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+    <span class="n">Wn</span> <span class="o">=</span> <span class="n">W</span><span class="o">/</span><span class="n">Wm</span>
+
+     <span class="c1"># make a Fourier domain</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xI</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">dI</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xI</span><span class="p">])</span>
+    <span class="n">DI</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dI</span><span class="p">)</span>
+    <span class="c1">#d = dI[0]</span>
+    <span class="c1"># we use the convention that slices are one unit apart</span>
+    <span class="n">d</span><span class="o">=</span><span class="mi">1</span>
+    <span class="c1">#f = torch.arange(n,dtype=dtype,device=device)/n/d</span>
+    
+    <span class="c1"># try here to blur in 3D</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ni</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span><span class="o">/</span><span class="n">ni</span><span class="o">/</span><span class="n">di</span> <span class="k">for</span> <span class="n">ni</span><span class="p">,</span><span class="n">di</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span><span class="n">dI</span><span class="p">)]</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">f</span><span class="p">,</span><span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    
+    
+    <span class="c1"># define the operator in the fourier domain</span>
+    <span class="c1"># LL plus identity</span>
+    <span class="c1">#L = (2.0*asquare* (1-torch.cos(2.0*np.pi*f*d))/d**2)</span>
+    <span class="n">asquare3d</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">asquare</span><span class="p">,</span><span class="n">asquare</span><span class="o">*</span><span class="n">anisotropy_factor</span><span class="p">,</span><span class="n">asquare</span><span class="o">*</span><span class="n">anisotropy_factor</span><span class="p">],</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">asquare3d</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">F</span><span class="o">*</span><span class="n">dI</span><span class="p">))</span><span class="o">/</span><span class="n">dI</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">LL</span> <span class="o">=</span> <span class="n">L</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">LLnorm</span><span class="o">=</span><span class="n">LL</span><span class="o">/</span><span class="n">Wm</span>
+    <span class="n">oooperator</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">LLnorm</span><span class="p">)</span>   
+    <span class="c1"># for FWHM computation, let&#39;s take the inverse fourier transform</span>
+    <span class="k">if</span> <span class="n">return_fwhm</span> <span class="ow">or</span> <span class="n">return_K</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftn</span><span class="p">(</span><span class="n">oooperator</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+
+    <span class="n">Esave</span> <span class="o">=</span> <span class="p">[]</span>
+
+            
+    <span class="n">ERsave</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">EMsave</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">Esave</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="c1"># value of the loss</span>
+        <span class="c1">#ER = torch.sum( torch.fft.ifftn( torch.fft.fftn(I,dim=1)*L[...,None,None] , dim=1).real**2 )*DI</span>
+        <span class="n">ER</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftn</span><span class="p">(</span> <span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">I</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span><span class="o">*</span><span class="n">L</span> <span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">real</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span><span class="o">*</span><span class="n">DI</span>
+        <span class="c1">#print(&#39;Ishape is&#39;,I.shape)</span>
+        <span class="c1">#print(&#39;phiiRiJ shape is&#39;,phiiRiJ.shape)</span>
+        <span class="c1">#print(&#39;W shape is&#39;,W.shape)</span>
+        <span class="c1">#EMM = torch.sum(  (I - phiiRiJ)**2 * W )/2*DI*Wm</span>
+        <span class="c1">#EM = torch.sum(   ((I-phiiRiJ)**2/(c + (I-phiiRiJ)**2))   )*DI # middle term of 2.12</span>
+        <span class="n">EM</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="p">(</span><span class="n">I</span><span class="o">-</span><span class="n">phiiRiJ</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">W</span><span class="p">)</span><span class="o">*</span><span class="n">DI</span> <span class="c1"># daniel changed this</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">ER</span> <span class="o">+</span> <span class="n">EM</span>
+        <span class="n">Esave</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">ERsave</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ER</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">EMsave</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">EM</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        
+        <span class="c1"># update</span>
+        <span class="n">toblur</span> <span class="o">=</span> <span class="p">(</span> <span class="n">phiiRiJ</span><span class="o">*</span><span class="n">Wn</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">Wn</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">blurred</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftn</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">toblur</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span><span class="o">*</span><span class="n">oooperator</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">I</span> <span class="o">=</span> <span class="n">blurred</span>
+        
+        <span class="k">if</span> <span class="n">draw</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">it</span><span class="o">%</span><span class="n">draw</span> <span class="ow">or</span> <span class="n">it</span> <span class="o">==</span> <span class="n">niter</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">I</span><span class="p">[:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">I</span><span class="p">[:,:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">I</span><span class="p">[:,:,:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+            
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">phiiRiJ</span><span class="p">[:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">phiiRiJ</span><span class="p">[:,:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">6</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">phiiRiJ</span><span class="p">[:,:,:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+            <span class="c1"># hfig.update(fig)</span>
+        
+    <span class="k">if</span> <span class="n">return_K</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">K</span>
+    <span class="k">elif</span> <span class="n">return_fwhm</span><span class="p">:</span>
+
+        <span class="n">half_width_half_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">K</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">&lt;</span><span class="mf">0.5</span><span class="o">*</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">())[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">full_width_half_max_0</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">half_width_half_max</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">half_width_half_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">&lt;</span><span class="mf">0.5</span><span class="o">*</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">())[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">full_width_half_max_1</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">half_width_half_max</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">half_width_half_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,:]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">&lt;</span><span class="mf">0.5</span><span class="o">*</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">())[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">full_width_half_max_2</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">half_width_half_max</span><span class="o">+</span><span class="mi">1</span>
+    
+        <span class="k">return</span> <span class="n">full_width_half_max_0</span><span class="p">,</span><span class="n">full_width_half_max_1</span><span class="p">,</span><span class="n">full_width_half_max_2</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># normal returns</span>
+        <span class="k">return</span> <span class="n">I</span><span class="p">,</span><span class="n">E</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span><span class="n">ER</span><span class="o">.</span><span class="n">item</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="atlas_from_aligned_slices_and_weights_">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.atlas_from_aligned_slices_and_weights_">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">atlas_from_aligned_slices_and_weights_</span><span class="p">(</span><span class="n">xI</span><span class="p">,</span><span class="n">I</span><span class="p">,</span><span class="n">phiiRiJ</span><span class="p">,</span><span class="n">W</span><span class="p">,</span><span class="n">asquare</span><span class="p">,</span><span class="n">niter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">draw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">fig</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">hfig</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inputs are 3D pixel locations. xI</span>
+<span class="sd">    </span>
+<span class="sd">    Initial guess of atlas I.</span>
+<span class="sd">    </span>
+<span class="sd">    We previously calculated RphiI, and we need the oppose. We need phiiRiJ</span>
+<span class="sd">    </span>
+<span class="sd">    a coefficient in front of laplacian.  This has units of length, so we have asquare \Delta</span>
+<span class="sd">    </span>
+<span class="sd">    we want to minimize</span>
+<span class="sd">    </span>
+<span class="sd">    note, W needs to include determinant of jacobians</span>
+<span class="sd">    </span>
+<span class="sd">    \int \|I - phiiRiJ\|**2 W dx + \int |L  I|**2 dx</span>
+<span class="sd">    </span>
+<span class="sd">    Here L will be a negative laplacian</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    xI : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    I : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    phiiRiJ : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    W : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    asquare : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    niter : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    draw : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    fig : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    hfig :  TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    I : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    E : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    ER : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">draw</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">fig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">hfig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">hfig</span> <span class="o">=</span> <span class="n">display</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span><span class="n">display_id</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="c1"># we don&#39;t want to propagate gradients here</span>
+    <span class="n">phiiRiJ</span> <span class="o">=</span> <span class="n">phiiRiJ</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>    
+    <span class="n">W</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+    
+    <span class="c1"># normalize W</span>
+    <span class="n">Wm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+    <span class="n">Wn</span> <span class="o">=</span> <span class="n">W</span><span class="o">/</span><span class="n">Wm</span>
+
+     <span class="c1"># make a Fourier domain</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xI</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">dI</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xI</span><span class="p">])</span>
+    <span class="n">DI</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dI</span><span class="p">)</span>
+    <span class="c1">#d = dI[0]</span>
+    <span class="c1"># we use the convention that slices are one unit apart</span>
+    <span class="n">d</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span><span class="o">/</span><span class="n">n</span><span class="o">/</span><span class="n">d</span>
+  
+    <span class="c1"># define the operator in the fourier domain</span>
+    <span class="c1"># LL plus identity</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">asquare</span><span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">f</span><span class="o">*</span><span class="n">d</span><span class="p">))</span><span class="o">/</span><span class="n">d</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">LL</span> <span class="o">=</span> <span class="n">L</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">LLnorm</span><span class="o">=</span><span class="n">LL</span><span class="o">/</span><span class="n">Wm</span>
+    <span class="n">oooperator</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">LLnorm</span><span class="p">)</span>   
+    <span class="n">Esave</span> <span class="o">=</span> <span class="p">[]</span>
+
+            
+    <span class="n">ERsave</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">EMsave</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">Esave</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="c1"># value of the loss</span>
+        <span class="n">ER</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftn</span><span class="p">(</span> <span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">I</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">L</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">]</span> <span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span><span class="o">*</span><span class="n">DI</span>
+        <span class="c1">#print(&#39;Ishape is&#39;,I.shape)</span>
+        <span class="c1">#print(&#39;phiiRiJ shape is&#39;,phiiRiJ.shape)</span>
+        <span class="c1">#print(&#39;W shape is&#39;,W.shape)</span>
+        <span class="c1">#EMM = torch.sum(  (I - phiiRiJ)**2 * W )/2*DI*Wm</span>
+        <span class="c1">#EM = torch.sum(   ((I-phiiRiJ)**2/(c + (I-phiiRiJ)**2))   )*DI # middle term of 2.12</span>
+        <span class="n">EM</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="p">(</span><span class="n">I</span><span class="o">-</span><span class="n">phiiRiJ</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">W</span><span class="p">)</span><span class="o">*</span><span class="n">DI</span> <span class="c1"># daniel changed this</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">ER</span> <span class="o">+</span> <span class="n">EM</span>
+        <span class="n">Esave</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">ERsave</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ER</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">EMsave</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">EM</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        
+        <span class="c1"># update</span>
+        <span class="n">toblur</span> <span class="o">=</span> <span class="p">(</span> <span class="n">phiiRiJ</span><span class="o">*</span><span class="n">Wn</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">Wn</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">blurred</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftn</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">toblur</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">oooperator</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">],</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">I</span> <span class="o">=</span> <span class="n">blurred</span>
+        
+        <span class="k">if</span> <span class="n">draw</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">it</span><span class="o">%</span><span class="n">draw</span> <span class="ow">or</span> <span class="n">it</span> <span class="o">==</span> <span class="n">niter</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">I</span><span class="p">[:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">I</span><span class="p">[:,:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">I</span><span class="p">[:,:,:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+            
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">phiiRiJ</span><span class="p">[:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">phiiRiJ</span><span class="p">[:,:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">6</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">phiiRiJ</span><span class="p">[:,:,:,</span><span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+            <span class="n">hfig</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+        
+    
+    <span class="k">return</span> <span class="n">I</span><span class="p">,</span><span class="n">E</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span><span class="n">ER</span><span class="o">.</span><span class="n">item</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="AX">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.AX">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">AX</span><span class="p">(</span><span class="n">Ai</span><span class="p">,</span><span class="n">XJ</span><span class="p">):</span>    
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO - Function description</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    Ai : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    XJ : TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    Xs : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Xs</span> <span class="o">=</span> <span class="p">(</span><span class="n">Ai</span><span class="p">[:,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,:</span><span class="mi">3</span><span class="p">,:</span><span class="mi">3</span><span class="p">]</span><span class="nd">@XJ</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="kc">None</span><span class="p">])[</span><span class="o">...</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">Ai</span><span class="p">[:,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,:</span><span class="mi">3</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">Xs</span></div>
+
+
+
+<div class="viewcode-block" id="A2DtoA3D">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.A2DtoA3D">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">A2DtoA3D</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO - Function description</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    A : TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    out : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">A</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">])</span> <span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">A</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="kc">None</span><span class="p">])</span>  <span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">A</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">,</span><span class="kc">None</span><span class="p">])</span>
+    <span class="n">colA</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">col</span><span class="p">,</span><span class="n">A</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">row</span><span class="p">,</span><span class="n">colA</span><span class="p">],</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="detjac">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.detjac">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">detjac</span><span class="p">(</span><span class="n">xv</span><span class="p">,</span><span class="n">v</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO - Function description</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    xv : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    v : TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    detjac : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dv</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xv</span><span class="p">]</span>    
+    <span class="n">detjac</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span> <span class="n">exp</span><span class="p">(</span><span class="n">xv</span><span class="p">,</span><span class="n">v2DToV3D</span><span class="p">(</span><span class="n">v</span><span class="p">))[</span><span class="o">...</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span> <span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="n">dv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">dv</span><span class="p">[</span><span class="mi">2</span><span class="p">])),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">detjac</span></div>
+
+
+<div class="viewcode-block" id="down2ax">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.down2ax">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">down2ax</span><span class="p">(</span><span class="n">I</span><span class="p">,</span><span class="n">ax</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO - Function description</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    I : nd-array</span>
+<span class="sd">        TODO</span>
+<span class="sd">    ax : matplotlib.pyplot.axis</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    Id : nd-array</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ndims</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="n">s0</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndims</span><span class="p">)]</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndims</span><span class="p">)]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span>
+    <span class="n">nd</span> <span class="o">=</span> <span class="n">n</span><span class="o">//</span><span class="mi">2</span>
+    
+    <span class="n">s0</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nd</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">s1</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nd</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">Id</span> <span class="o">=</span> <span class="n">I</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">s0</span><span class="p">)]</span><span class="o">*</span><span class="mf">0.5</span> <span class="o">+</span> <span class="n">I</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">s1</span><span class="p">)]</span><span class="o">*</span><span class="mf">0.5</span>
+    <span class="k">return</span> <span class="n">Id</span></div>
+
+
+<div class="viewcode-block" id="exp">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.exp">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">exp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">N</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Group exponential by scaling and squaring</span>
+<span class="sd">    v should have xyz components at the end and be 3d</span>
+<span class="sd">    </span>
+<span class="sd">    Take a small displacement, and compose it with itself </span>
+<span class="sd">    many times, to give a big displacement.</span>
+<span class="sd">    </span>
+<span class="sd">    If N = 1, the output is id + v</span>
+<span class="sd">    </span>
+<span class="sd">    If N = 2, the output is (id + v/2)\circ (id + v/2)</span>
+<span class="sd">    </span>
+<span class="sd">    If N = 3, the output is (id + v/8)\circ ... \circ (id + v/8)</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    x : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    v : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    N : TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    phi : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">,</span><span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span> <span class="o">+</span> <span class="n">v</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">N</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># when interpolating, move xyz component to the beginning, then back</span>
+        <span class="c1"># 0 boundary conditions are probably ok</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">x</span><span class="p">,(</span><span class="n">phi</span><span class="o">-</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="n">phi</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">phi</span>
+    
+    <span class="k">return</span> <span class="n">phi</span></div>
+
+
+<div class="viewcode-block" id="extent_from_x">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.extent_from_x">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extent_from_x</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function gets a coordinate system and output the extent argument for matplotlib imshow</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    x : arr[int]</span>
+<span class="sd">        An N-dimensional coordinate system</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    out : arr</span>
+<span class="sd">        The extent of x to be used as an input for matplotlib.pyplot.imshow()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">[</span><span class="n">xi</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">xi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="interp">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.interp">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">interp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">I</span><span class="p">,</span><span class="n">phii</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interpolate a signal with specified voxel spacing, in torch. Note, the input data should be 3D images, with first dimension a channel. phii has xyz on the last dimension.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    x : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    I : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    phii : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    kwargs : TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    phiI : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># first we center phii based on x</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">xi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">xi</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span> <span class="c1"># this will fail if there&#39;s only one slice</span>
+    <span class="n">phii</span> <span class="o">=</span> <span class="p">(</span><span class="n">phii</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span><span class="o">/</span><span class="n">d</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span>
+    
+    <span class="k">if</span> <span class="s1">&#39;align_corners&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;align_corners&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    
+    <span class="n">phiI</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">grid_sample</span><span class="p">(</span><span class="n">I</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span><span class="n">phii</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="kc">None</span><span class="p">],</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">phiI</span></div>
+
+
+<div class="viewcode-block" id="inverse_transform_image">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.inverse_transform_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform_image</span><span class="p">(</span><span class="n">xI</span><span class="p">,</span><span class="n">I</span><span class="p">,</span><span class="n">xv</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">xJ</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Note this is redundant with the below, but is a nice helper function</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    xI : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    I : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    xv : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    v : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    A : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    xJ : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    kwargs : TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    phiiAiI : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">XJ</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">xJ</span><span class="p">,</span><span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">XV</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">xv</span><span class="p">,</span><span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    
+    
+    <span class="n">A</span> <span class="o">=</span> <span class="n">A2DtoA3D</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    
+
+    <span class="c1"># convert v to phii</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">xv</span><span class="p">,</span><span class="n">v2DToV3D</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+    
+    <span class="c1"># sample on xj</span>
+    <span class="n">phis</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">xv</span><span class="p">,(</span><span class="n">phi</span><span class="o">-</span><span class="n">XV</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="n">XJ</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">XJ</span>
+    
+    <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">phis</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">phis</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">Xs</span> <span class="o">=</span> <span class="n">AX</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">phis</span><span class="p">)</span>
+        
+    <span class="c1"># transform the image</span>
+    <span class="k">if</span> <span class="s1">&#39;padding_mode&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;padding_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;border&#39;</span>
+    <span class="n">phiiAiI</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">xI</span><span class="p">,</span><span class="n">I</span><span class="p">,</span><span class="n">Xs</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">phiiAiI</span></div>
+
+
+<div class="viewcode-block" id="L_from_xv_a_p">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.L_from_xv_a_p">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">L_from_xv_a_p</span><span class="p">(</span><span class="n">xv</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">p</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO - Function description</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    xv : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    a : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    p : TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    L : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dv</span> <span class="o">=</span> <span class="n">xv</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xv</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">fv</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="n">n</span><span class="o">/</span><span class="n">dv</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xv</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="n">xv</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))]</span>
+    <span class="n">FV</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">fv</span><span class="p">,</span><span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">FV</span><span class="o">*</span><span class="n">dv</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">dv</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="n">p</span>
+    <span class="k">return</span> <span class="n">L</span></div>
+
+
+<div class="viewcode-block" id="robust_loss">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.robust_loss">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">robust_loss</span><span class="p">(</span><span class="n">RphiI</span><span class="p">,</span><span class="n">xJ</span><span class="p">,</span><span class="n">J</span><span class="p">,</span><span class="n">W</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">return_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; We input the deformed atlas I, the target J, and the voxel coordinates of J, and the robust constant c</span>
+<span class="sd">    note there is a W here which should be binary because we&#39;re not going to sum over all the pixels</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    RphiI : TODO</span>
+<span class="sd">        TOOD</span>
+<span class="sd">    xJ : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    J : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    W : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    c : float32</span>
+<span class="sd">        Default - 0.5; TODO - Parameter description</span>
+<span class="sd">    return_weights - bool</span>
+<span class="sd">        Default - False; If true, return the weights too</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    E : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    W : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">dxJ</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xJ</span><span class="p">])</span>
+    <span class="n">DJ</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dxJ</span><span class="p">)</span>
+    
+    <span class="n">err2</span> <span class="o">=</span>  <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="p">(</span><span class="n">RphiI</span> <span class="o">-</span> <span class="n">J</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>  <span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">W</span> <span class="c1"># make sure the error does not go on padding</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">c</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">err2</span> <span class="o">/</span> <span class="p">(</span>  <span class="n">err2</span> <span class="o">+</span> <span class="n">c</span> <span class="p">)</span>  <span class="p">)</span><span class="o">*</span><span class="n">DJ</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">return_weights</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">E</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">c</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span> <span class="p">(</span><span class="n">c</span> <span class="o">+</span> <span class="n">err2</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span><span class="o">*</span><span class="n">W</span> <span class="c1"># make sure weight is 0</span>
+        <span class="c1"># note: we do not include pixel size d here because it will get multiplied by d later</span>
+        <span class="c1"># no gradient calculations here</span>
+        <span class="c1"># note, if c is really big, this goes to 0</span>
+        <span class="c1"># and if c is really small, this looks like c/err2**2, and so also goes to 0</span>
+        <span class="k">return</span> <span class="n">E</span><span class="p">,</span> <span class="n">W</span></div>
+
+
+<div class="viewcode-block" id="transform_image">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.transform_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">transform_image</span><span class="p">(</span><span class="n">xI</span><span class="p">,</span><span class="n">I</span><span class="p">,</span><span class="n">xv</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">xJ</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Note this is redundant with the below, but is a nice helper function</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    xI : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    I : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    xv : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    v : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    A : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    xJ : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    kwargs : TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    AphiI : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">XJ</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">xJ</span><span class="p">,</span><span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">XV</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">xv</span><span class="p">,</span><span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">Ai</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="n">Ai</span> <span class="o">=</span> <span class="n">A2DtoA3D</span><span class="p">(</span><span class="n">Ai</span><span class="p">)</span>
+    <span class="n">Ai</span> <span class="o">=</span> <span class="n">Ai</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">XJ</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">XJ</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="c1"># Switch to torch.float32</span>
+    <span class="n">Xs</span> <span class="o">=</span> <span class="n">AX</span><span class="p">(</span><span class="n">Ai</span><span class="p">,</span><span class="n">XJ</span><span class="p">)</span>
+
+    <span class="c1"># convert v to phii</span>
+    <span class="n">phii</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">xv</span><span class="p">,</span><span class="n">v2DToV3D</span><span class="p">(</span><span class="o">-</span><span class="n">v</span><span class="p">))</span>
+
+    <span class="c1"># sample at Xs</span>
+    <span class="n">Xs</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">xv</span><span class="p">,(</span><span class="n">phii</span> <span class="o">-</span> <span class="n">XV</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">Xs</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">Xs</span>
+
+    <span class="c1"># transform the image</span>
+    <span class="k">if</span> <span class="s1">&#39;padding_mode&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;padding_mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;border&#39;</span>
+    <span class="n">AphiI</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">xI</span><span class="p">,</span><span class="n">I</span><span class="p">,</span><span class="n">Xs</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">AphiI</span></div>
+
+
+<div class="viewcode-block" id="v2DToV3D">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.v2DToV3D">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">v2DToV3D</span><span class="p">(</span><span class="n">v2d</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TOOD - Function description</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    v2d : TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    out : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span> <span class="p">(</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">v2d</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="kc">None</span><span class="p">]),</span> <span class="n">v2d</span> <span class="p">)</span> <span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="weighted_see_registration">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.weighted_see_registration">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">weighted_see_registration</span><span class="p">(</span><span class="n">xI</span><span class="p">,</span><span class="n">I</span><span class="p">,</span><span class="n">xJ</span><span class="p">,</span><span class="n">J</span><span class="p">,</span><span class="n">W</span><span class="p">,</span><span class="n">xv</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">sigmaM</span><span class="p">,</span><span class="n">sigmaR</span><span class="p">,</span><span class="n">niter</span><span class="p">,</span><span class="n">epT</span><span class="p">,</span><span class="n">epL</span><span class="p">,</span><span class="n">epv</span><span class="p">,</span><span class="n">draw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">fig</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">hfig</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO - Function description</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    xI : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    I : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    xJ : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    J : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    W : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    xv : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    v : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    A : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    a : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    p : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    sigmaM : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    sigmaR : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    niter : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    epT : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    epL : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    epv : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    draw : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    fig : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    hfig : TODO</span>
+<span class="sd">        TODO</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    A : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    v : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    E : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    ER : TODO</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">A</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">v</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">XJ</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">xJ</span><span class="p">,</span><span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">XV</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">xv</span><span class="p">,</span><span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">dv</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xv</span><span class="p">])</span>
+    <span class="n">Dv</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dv</span><span class="p">)</span>
+    <span class="n">dJ</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xJ</span><span class="p">])</span>
+    <span class="n">DJ</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dJ</span><span class="p">)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">L_from_xv_a_p</span><span class="p">(</span><span class="n">xv</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">LL</span> <span class="o">=</span> <span class="n">L</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">LL</span>
+
+    <span class="n">Esave</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">Tsave</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">Lsave</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">maxvsave</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">draw</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">fig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">i</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">hfig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">hfig</span> <span class="o">=</span> <span class="n">display</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span><span class="n">display_id</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">v</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">A</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+        <span class="c1"># act on XJ</span>
+        <span class="n">Ai</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">Ai</span> <span class="o">=</span> <span class="n">A2DtoA3D</span><span class="p">(</span><span class="n">Ai</span><span class="p">)</span>
+        <span class="n">Ai</span> <span class="o">=</span> <span class="n">Ai</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">XJ</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">XJ</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="c1"># Switch to torch.float32</span>
+        <span class="n">Xs</span> <span class="o">=</span> <span class="n">AX</span><span class="p">(</span><span class="n">Ai</span><span class="p">,</span><span class="n">XJ</span><span class="p">)</span>
+
+        <span class="c1"># convert v to phii</span>
+        <span class="n">phii</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">xv</span><span class="p">,</span><span class="n">v2DToV3D</span><span class="p">(</span><span class="o">-</span><span class="n">v</span><span class="p">))</span>
+
+        <span class="c1"># sample at Xs</span>
+        <span class="n">Xs</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">xv</span><span class="p">,(</span><span class="n">phii</span> <span class="o">-</span> <span class="n">XV</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">Xs</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">Xs</span>
+
+        <span class="c1"># transform the image</span>
+        <span class="n">AphiI</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">xI</span><span class="p">,</span><span class="n">I</span><span class="p">,</span><span class="n">Xs</span><span class="p">,</span><span class="n">padding_mode</span><span class="o">=</span><span class="s1">&#39;border&#39;</span><span class="p">)</span> <span class="c1"># border boundary condition is important when we have a white background</span>
+
+        <span class="c1"># get error</span>
+        <span class="n">EM</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">AphiI</span> <span class="o">-</span> <span class="n">J</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">W</span><span class="p">)</span><span class="o">*</span><span class="n">DJ</span><span class="o">/</span><span class="n">sigmaM</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mf">2.0</span>
+        <span class="n">ER</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span> <span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">LL</span><span class="p">)</span><span class="o">/</span><span class="n">sigmaR</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mf">2.0</span><span class="o">/</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="o">...</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span><span class="o">*</span><span class="n">Dv</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">EM</span> <span class="o">+</span> <span class="n">ER</span>
+        <span class="n">Esave</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">E</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span><span class="n">EM</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span><span class="n">ER</span><span class="o">.</span><span class="n">item</span><span class="p">()])</span>
+        <span class="n">Tsave</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>    <span class="n">A</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>  <span class="p">)</span>
+        <span class="n">Lsave</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">A</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">,:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>    <span class="p">)</span>
+        <span class="n">maxvsave</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>  <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>  <span class="p">)</span>
+        <span class="c1"># backprop</span>
+        <span class="n">E</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+
+        <span class="c1"># update</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="c1"># update T</span>
+            <span class="n">A</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-=</span> <span class="n">A</span><span class="o">.</span><span class="n">grad</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">epT</span>
+            <span class="c1"># update L</span>
+            <span class="n">A</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">,:</span><span class="mi">2</span><span class="p">]</span> <span class="o">-=</span> <span class="n">A</span><span class="o">.</span><span class="n">grad</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">,:</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">epL</span>
+            <span class="c1"># rigid</span>
+            <span class="n">u</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">vh</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">A</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">,:</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">A</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">,:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span><span class="nd">@vh</span>
+
+
+            <span class="c1"># update v</span>
+            <span class="n">v</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:]</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftn</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">grad</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">K</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="kc">None</span><span class="p">],</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">real</span><span class="o">*</span><span class="n">epv</span>
+
+        <span class="c1"># draw</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">draw</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">it</span><span class="o">%</span><span class="n">draw</span> <span class="ow">or</span> <span class="n">it</span> <span class="o">==</span> <span class="n">niter</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Esave</span><span class="p">)</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;energy&#39;</span><span class="p">)</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Tsave</span><span class="p">)</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Translation&#39;</span><span class="p">)</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Lsave</span><span class="p">)</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Linear&#39;</span><span class="p">)</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">maxvsave</span><span class="p">)</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;max |v|&#39;</span><span class="p">)</span>
+                
+                
+                <span class="n">ax</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span>  <span class="p">(</span> <span class="p">(</span><span class="n">AphiI</span><span class="p">[:,:,</span><span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">J</span><span class="p">[:,:,</span><span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">])</span><span class="o">*</span><span class="n">W</span><span class="p">[:,</span><span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span>  <span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">*</span><span class="mf">0.5</span><span class="o">+</span><span class="mf">0.5</span>  <span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+                <span class="c1">#ax[5].cla()</span>
+                <span class="c1">#ax[5].imshow(  (  (AphiI[:,:,:,J.shape[3]//2]-J[:,:,:,J.shape[3]//2])*W[:,:,J.shape[3]//2] ).permute(1,2,0).cpu()*0.5+0.5  ,aspect=&#39;auto&#39;, interpolation=&#39;none&#39;)</span>
+                
+                <span class="n">ax</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span>
+                <span class="n">ax</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span>  <span class="p">(</span>  <span class="p">(</span><span class="n">AphiI</span><span class="p">[:,:,:,</span><span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">J</span><span class="p">[:,:,:,</span><span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">])</span><span class="o">*</span><span class="n">W</span><span class="p">[:,:,</span><span class="n">J</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">*</span><span class="mf">0.5</span><span class="o">+</span><span class="mf">0.5</span>  <span class="p">,</span><span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+
+                <span class="c1"># hfig.update(fig)</span>
+
+    <span class="n">A</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">v</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+    
+    <span class="k">return</span> <span class="n">A</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">E</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span><span class="n">ER</span><span class="o">.</span><span class="n">item</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="x_from_n_d">
+<a class="viewcode-back" href="../slice_alignment_help.html#slice_alignment_help.x_from_n_d">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">x_from_n_d</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">d</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function takes in an image size and pixel size, and outputs a zero centered coordinate system</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ===========</span>
+<span class="sd">    n : int or arr[int]</span>
+<span class="sd">        The image size along each axis</span>
+<span class="sd">    d : int or arr[int]</span>
+<span class="sd">        The pixel size along each axis</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ========</span>
+<span class="sd">    x : arr</span>
+<span class="sd">        The zero-centered coordinate system for an image of size &#39;n&#39; with pixel size &#39;d&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ni</span><span class="p">)</span><span class="o">*</span><span class="n">di</span> <span class="o">-</span> <span class="p">(</span><span class="n">ni</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">di</span><span class="o">/</span><span class="mi">2</span> <span class="k">for</span> <span class="n">ni</span><span class="p">,</span><span class="n">di</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">d</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">atlas_free_slice_alignment  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">slice_alignment_help</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2026, Daniel Tward, Andrew Bennecke, Gary Zhou.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

@@ -31,6 +31,9 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="slice_alignment_help.html" title="Atlas Free Slice Alignment Helper Functions"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -46,8 +49,86 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="atlas-free-slice-alignment-pipeline">
-<h1>Atlas Free Slice Alignment Pipeline<a class="headerlink" href="#atlas-free-slice-alignment-pipeline" title="Link to this heading">¶</a></h1>
+  <section id="module-slice_alignment">
+<span id="atlas-free-slice-alignment-pipeline"></span><h1>Atlas Free Slice Alignment Pipeline<a class="headerlink" href="#module-slice_alignment" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="slice_alignment.main">
+<span class="sig-prename descclassname"><span class="pre">slice_alignment.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment.main" title="Link to this definition">¶</a></dt>
+<dd><p>Perform atlas-free slice alignment of a set of images</p>
+<section id="parameters">
+<h2>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>outdir<span class="classifier">str</span></dt><dd><p>The directory where all intermediate and final outputs should be saved</p>
+</dd>
+<dt>-fnames<span class="classifier">list of str</span></dt><dd><p>The list of all files to be registered</p>
+</dd>
+<dt>-npad<span class="classifier">int</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-down<span class="classifier">int</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-a<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-p<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-niter_big_loop<span class="classifier">int</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-niter_reg<span class="classifier">int</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-niter_atlas<span class="classifier">int</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-asquare<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-asquare0<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-anisotropy_factor<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-epT<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-epL<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-epv<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-c<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-sigmaM<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-sigmaR<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-a_reg<span class="classifier">float</span></dt><dd><p>TODO</p>
+</dd>
+<dt>-device<span class="classifier">str</span></dt><dd><p>Default - cpu; The device where PyTorch computations should be performed</p>
+</dd>
+<dt>-dtype<span class="classifier">str</span></dt><dd><p>Default - float; The dtype used for PyTorch computations</p>
+</dd>
+<dt>–enable_deformation<span class="classifier">bool</span></dt><dd><p>TODO: NOT CURRENTLY SUPPORTED</p>
+</dd>
+<dt>–remove_artifacts<span class="classifier">bool</span></dt><dd><p>If present, remove rows or columns containing exclusively 1s. This type of artifact is common in certain use cases.</p>
+</dd>
+<dt>–saveAllFigs<span class="classifier">bool</span></dt><dd><p>If present, save all potential figures into ‘outdir’</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns:<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>A<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+</dd>
+<dt>v<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+</dd>
+<dt>Esave<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+</dd>
+<dt>RphiI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+</dd>
+<dt>phiiRiJ<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+</dd>
+<dt>Wshow<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+</dd>
+<dt>W_robust_loss<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
 </section>
 
 
@@ -57,6 +138,16 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Atlas Free Slice Alignment Pipeline</a><ul>
+<li><a class="reference internal" href="#slice_alignment.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
   <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="index.html"
@@ -94,6 +185,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="slice_alignment_help.html" title="Atlas Free Slice Alignment Helper Functions"
              >next</a> |</li>
