@@ -1,15 +1,12 @@
 import torch
-# torch.concatenate=torch.cat # compatibility
 import numpy as np
 import matplotlib.pyplot as plt
 from glob import glob
 from os.path import join,basename,splitext
-# %matplotlib widget
 from scipy.interpolate import interpn
-# plt.set_loglevel('critical')
-from scipy.misc import derivative
+from IPython.display import display
 
-def atlas_from_aligned_slices_and_weights(xI,I,phiiRiJ,W,asquare,niter=10,draw=0,fig=None,hfig=None,anisotropy_factor=4**2,return_K=False,return_fwhm=False):
+def atlas_from_aligned_slices_and_weights(xI,I,dtype,device,phiiRiJ,W,asquare,niter=10,draw=0,fig=None,hfig=None,anisotropy_factor=4**2,return_K=False,return_fwhm=False):
     '''
     Inputs are 3D pixel locations. xI
     
@@ -54,6 +51,10 @@ def atlas_from_aligned_slices_and_weights(xI,I,phiiRiJ,W,asquare,niter=10,draw=0
     return_K : TODO
         TODO
     return_fwhm : TODO
+        TODO
+    dtype : TODO
+        TODO
+    device : TODO
         TODO
 
     Returns:
@@ -151,7 +152,7 @@ def atlas_from_aligned_slices_and_weights(xI,I,phiiRiJ,W,asquare,niter=10,draw=0
             ax.imshow(phiiRiJ[:,:,I.shape[2]//2].permute(1,2,0),interpolation='none',aspect='auto')
             ax = fig.add_subplot(2,3,6)
             ax.imshow(phiiRiJ[:,:,:,I.shape[3]//2].permute(1,2,0),interpolation='none',aspect='auto')
-            hfig.update(fig)
+            # hfig.update(fig)
         
     if return_K:
         return K
@@ -505,6 +506,7 @@ def inverse_transform_image(xI,I,xv,v,A,xJ,**kwargs):
     # sample on xj
     phis = interp(xv,(phi-XV).permute(-1,0,1,2),XJ).permute(1,2,3,0) + XJ
     
+    A = A.to(dtype=phis.dtype, device=phis.device)
     Xs = AX(A,phis)
         
     # transform the image
@@ -611,6 +613,7 @@ def transform_image(xI,I,xv,v,A,xJ,**kwargs):
     
     Ai = torch.linalg.inv(A)
     Ai = A2DtoA3D(Ai)
+    Ai = Ai.to(dtype=XJ.dtype, device=XJ.device) # Switch to torch.float32
     Xs = AX(Ai,XJ)
 
     # convert v to phii
@@ -642,7 +645,6 @@ def v2DToV3D(v2d):
     """
     return torch.concatenate( ( torch.zeros_like(v2d[...,0,None]), v2d ) , -1)
 
-# andrew use this one, not the commented ones below
 def weighted_see_registration(xI,I,xJ,J,W,xv,v,A,a,p,sigmaM,sigmaR,niter,epT,epL,epv,draw=0,fig=None,hfig=None):
     """
     TODO - Function description
@@ -737,6 +739,7 @@ def weighted_see_registration(xI,I,xJ,J,W,xv,v,A,a,p,sigmaM,sigmaR,niter,epT,epL
         # act on XJ
         Ai = torch.linalg.inv(A)
         Ai = A2DtoA3D(Ai)
+        Ai = Ai.to(dtype=XJ.dtype, device=XJ.device) # Switch to torch.float32
         Xs = AX(Ai,XJ)
 
         # convert v to phii
@@ -798,7 +801,7 @@ def weighted_see_registration(xI,I,xJ,J,W,xv,v,A,a,p,sigmaM,sigmaR,niter,epT,epL
                 ax[5].cla()
                 ax[5].imshow(  (  (AphiI[:,:,:,J.shape[3]//2]-J[:,:,:,J.shape[3]//2])*W[:,:,J.shape[3]//2] ).permute(1,2,0).cpu()*0.5+0.5  ,aspect='auto', interpolation='none')
 
-                hfig.update(fig)
+                # hfig.update(fig)
 
     A.requires_grad = False
     v.requires_grad = False
