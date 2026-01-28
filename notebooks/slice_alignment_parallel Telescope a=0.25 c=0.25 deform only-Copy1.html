@@ -156,28 +156,11 @@ plt.set_loglevel(&#39;critical&#39;)
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>[np.unique(wi) for wi in W_]
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>Ji.shape[:-1]
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># something weird here to load the files
 # andrew, try to make it less weird
 
 import os
-cwd = os.getcwd()
-img_dir = os.path.join(cwd,&#39;images&#39;)
+img_dir = &#39;/home/abenneck/Desktop/atlas_free_slice_alignment/images/&#39;
 
 Nfiles=12
 #root = &#39;/home/dtward/mounts/bmaproot/nafs/dtward/mitra_data/787_nissl_good_png/&#39;
@@ -724,22 +707,22 @@ def weighted_see_registration(xI,I,xJ,J,W,xv,v,A,a,p,sigmaM,sigmaR,niter,epT,epL
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># # this cell is just a test, it is not necessary in our code
-# A = torch.eye(3)[None].repeat(J.shape[1],1,1)
-# v = torch.zeros_like(v)
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># this cell is just a test, it is not necessary in our code
+A = torch.eye(3)[None].repeat(J.shape[1],1,1)
+v = torch.zeros_like(v)
 
-# niter = 2
-# niter = 1
-# niter = 10
-# epT = 1e-2
-# epL = 1e-6
-# epv = 1e1
-# sigmaM = 1.0 # this should always be 1
-# sigmaR = 1e5
-# draw = 5
+niter = 2
+niter = 1
+niter = 10
+epT = 1e-2
+epL = 1e-6
+epv = 1e1
+sigmaM = 1.0 # this should always be 1
+sigmaR = 1e5
+draw = 5
 
 
-# Anew,vnew,Eregistration,Ereg = weighted_see_registration(xI,I,xJ,J,W,xv,v,A,a,p,sigmaM,sigmaR,niter,epT,epL,epv,draw=5)
+Anew,vnew,Eregistration,Ereg = weighted_see_registration(xI,I,xJ,J,W,xv,v,A,a,p,sigmaM,sigmaR,niter,epT,epL,epv,draw=5)
 </pre></div>
 </div>
 </div>
@@ -1082,6 +1065,14 @@ def atlas_from_aligned_slices_and_weights(xI,I,phiiRiJ,W,asquare,niter=10,draw=0
         return full_width_half_max_0,full_width_half_max_1,full_width_half_max_2
     else: # normal returns
         return I,E.item(),ER.item()
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>phiiRiJ.shape
 </pre></div>
 </div>
 </div>

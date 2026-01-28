@@ -58,14 +58,14 @@
 <section id="parameters">
 <h2>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>A<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>A<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
 <section id="returns">
 <h2>Returns:<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>out<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>out<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
@@ -78,16 +78,16 @@
 <section id="id1">
 <h2>Parameters:<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>Ai<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>Ai<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>XJ<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>XJ<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
 <section id="id2">
 <h2>Returns:<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>Xs<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>Xs<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
@@ -100,11 +100,11 @@
 <section id="id3">
 <h2>Parameters:<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>xv<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xv<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>a<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>a<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>p<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>p<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
@@ -120,103 +120,48 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="slice_alignment_help.atlas_from_aligned_slices_and_weights">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">atlas_from_aligned_slices_and_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phiiRiJ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asquare</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hfig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anisotropy_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_fwhm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#atlas_from_aligned_slices_and_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.atlas_from_aligned_slices_and_weights" title="Link to this definition">¶</a></dt>
-<dd><p>Inputs are 3D pixel locations. xI</p>
-<p>Initial guess of atlas I.</p>
-<p>We previously calculated RphiI, and we need the oppose. We need phiiRiJ</p>
-<p>a coefficient in front of laplacian.  This has units of length, so we have asquare Delta</p>
-<p>we want to minimize</p>
-<p>note, W needs to include determinant of jacobians</p>
-<p>int |I - phiiRiJ|**2 W dx + int |L  I|**2 dx</p>
-<p>Here L will be a negative laplacian</p>
-<p>In this version we do bluring in 3D</p>
+<dd><p>TODO - Function Description</p>
 <section id="id5">
 <h2>Parameters:<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>xI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xI<span class="classifier">list[torch.Tensor[int]]</span></dt><dd><p>List of 3 orthogonal axes used to define voxel locations</p>
 </dd>
-<dt>I<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>I<span class="classifier">torch.Tensor</span></dt><dd><p>TODO</p>
 </dd>
-<dt>phiiRiJ<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>dtype<span class="classifier">str</span></dt><dd><p>TODO</p>
 </dd>
-<dt>W<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>device<span class="classifier">str</span></dt><dd><p>TODO</p>
 </dd>
-<dt>asquare<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>phiiRiJ<span class="classifier">torch.Tensor</span></dt><dd><p>TODO</p>
 </dd>
-<dt>niter<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>W<span class="classifier">torch.Tensor</span></dt><dd><p>TODO</p>
 </dd>
-<dt>draw<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>asquare<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>fig<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>niter<span class="classifier">int</span></dt><dd><p>TODO</p>
 </dd>
-<dt>hfig<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>draw<span class="classifier">bool</span></dt><dd><p>TODO</p>
 </dd>
-<dt>anisotropy_factor<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>fig<span class="classifier">matplotlib.pyplot.figure</span></dt><dd><p>TODO</p>
 </dd>
-<dt>return_K<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>hfig<span class="classifier">matplotlib.pyplot.figure</span></dt><dd><p>TODO</p>
 </dd>
-<dt>return_fwhm<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>anisotropy_factor<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>dtype<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>return_K<span class="classifier">bool</span></dt><dd><p>TODO</p>
 </dd>
-<dt>device<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>return_fwhm<span class="classifier">bool</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
 <section id="id6">
 <h2>Returns:<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>I<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>I<span class="classifier">torch.Tensor</span></dt><dd><p>TODO</p>
 </dd>
-<dt>E<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>E<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>ER<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-</dl>
-</section>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="slice_alignment_help.atlas_from_aligned_slices_and_weights_">
-<span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">atlas_from_aligned_slices_and_weights_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phiiRiJ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asquare</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hfig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#atlas_from_aligned_slices_and_weights_"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.atlas_from_aligned_slices_and_weights_" title="Link to this definition">¶</a></dt>
-<dd><p>Inputs are 3D pixel locations. xI</p>
-<p>Initial guess of atlas I.</p>
-<p>We previously calculated RphiI, and we need the oppose. We need phiiRiJ</p>
-<p>a coefficient in front of laplacian.  This has units of length, so we have asquare Delta</p>
-<p>we want to minimize</p>
-<p>note, W needs to include determinant of jacobians</p>
-<p>int |I - phiiRiJ|**2 W dx + int |L  I|**2 dx</p>
-<p>Here L will be a negative laplacian</p>
-<section id="id7">
-<h2>Parameters:<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>xI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-<dt>I<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-<dt>phiiRiJ<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-<dt>W<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-<dt>asquare<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-<dt>niter<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-<dt>draw<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-<dt>fig<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-<dt>hfig<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-</dl>
-</section>
-<section id="id8">
-<h2>Returns:<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h2>
-<dl class="simple">
-<dt>I<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-<dt>E<span class="classifier">TODO</span></dt><dd><p>TODO</p>
-</dd>
-<dt>ER<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>ER<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
@@ -226,19 +171,19 @@
 <dt class="sig sig-object py" id="slice_alignment_help.detjac">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">detjac</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#detjac"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.detjac" title="Link to this definition">¶</a></dt>
 <dd><p>TODO - Function description</p>
-<section id="id9">
-<h2>Parameters:<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h2>
+<section id="id7">
+<h2>Parameters:<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>xv<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xv<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>v<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>v<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
-<section id="id10">
-<h2>Returns:<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h2>
+<section id="id8">
+<h2>Returns:<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>detjac<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>detjac<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
@@ -248,8 +193,8 @@
 <dt class="sig sig-object py" id="slice_alignment_help.down2ax">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">down2ax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#down2ax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.down2ax" title="Link to this definition">¶</a></dt>
 <dd><p>TODO - Function description</p>
-<section id="id11">
-<h2>Parameters:<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h2>
+<section id="id9">
+<h2>Parameters:<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>I<span class="classifier">nd-array</span></dt><dd><p>TODO</p>
 </dd>
@@ -257,8 +202,8 @@
 </dd>
 </dl>
 </section>
-<section id="id12">
-<h2>Returns:<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h2>
+<section id="id10">
+<h2>Returns:<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>Id<span class="classifier">nd-array</span></dt><dd><p>TODO</p>
 </dd>
@@ -276,21 +221,21 @@ many times, to give a big displacement.</p>
 <p>If N = 1, the output is id + v</p>
 <p>If N = 2, the output is (id + v/2)circ (id + v/2)</p>
 <p>If N = 3, the output is (id + v/8)circ … circ (id + v/8)</p>
-<section id="id13">
-<h2>Parameters:<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h2>
+<section id="id11">
+<h2>Parameters:<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>x<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>x<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>v<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>v<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>N<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>N<span class="classifier">int</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
-<section id="id14">
-<h2>Returns:<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h2>
+<section id="id12">
+<h2>Returns:<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>phi<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>phi<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
@@ -300,15 +245,15 @@ many times, to give a big displacement.</p>
 <dt class="sig sig-object py" id="slice_alignment_help.extent_from_x">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">extent_from_x</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#extent_from_x"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.extent_from_x" title="Link to this definition">¶</a></dt>
 <dd><p>This function gets a coordinate system and output the extent argument for matplotlib imshow</p>
-<section id="id15">
-<h2>Parameters:<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h2>
+<section id="id13">
+<h2>Parameters:<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>x<span class="classifier">arr[int]</span></dt><dd><p>An N-dimensional coordinate system</p>
 </dd>
 </dl>
 </section>
-<section id="id16">
-<h2>Returns:<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h2>
+<section id="id14">
+<h2>Returns:<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>out<span class="classifier">arr</span></dt><dd><p>The extent of x to be used as an input for matplotlib.pyplot.imshow()</p>
 </dd>
@@ -320,23 +265,23 @@ many times, to give a big displacement.</p>
 <dt class="sig sig-object py" id="slice_alignment_help.interp">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">interp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phii</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#interp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.interp" title="Link to this definition">¶</a></dt>
 <dd><p>Interpolate a signal with specified voxel spacing, in torch. Note, the input data should be 3D images, with first dimension a channel. phii has xyz on the last dimension.</p>
-<section id="id17">
-<h2>Parameters:<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h2>
+<section id="id15">
+<h2>Parameters:<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>x<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>x<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>I<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>I<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>phii<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>phii<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>kwargs<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>kwargs<span class="classifier">dict</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
-<section id="id18">
-<h2>Returns:<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h2>
+<section id="id16">
+<h2>Returns:<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>phiI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>phiI<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
@@ -346,29 +291,29 @@ many times, to give a big displacement.</p>
 <dt class="sig sig-object py" id="slice_alignment_help.inverse_transform_image">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">inverse_transform_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xJ</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#inverse_transform_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.inverse_transform_image" title="Link to this definition">¶</a></dt>
 <dd><p>Note this is redundant with the below, but is a nice helper function</p>
-<section id="id19">
-<h2>Parameters:<a class="headerlink" href="#id19" title="Link to this heading">¶</a></h2>
+<section id="id17">
+<h2>Parameters:<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>xI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xI<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>I<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>I<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>xv<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xv<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>v<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>v<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>A<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>A<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>xJ<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xJ<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>kwargs<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>kwargs<span class="classifier">dict</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
-<section id="id20">
-<h2>Returns:<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h2>
+<section id="id18">
+<h2>Returns:<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>phiiAiI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>phiiAiI<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
@@ -379,16 +324,16 @@ many times, to give a big displacement.</p>
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">robust_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">RphiI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xJ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">J</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#robust_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.robust_loss" title="Link to this definition">¶</a></dt>
 <dd><p>We input the deformed atlas I, the target J, and the voxel coordinates of J, and the robust constant c
 note there is a W here which should be binary because we’re not going to sum over all the pixels</p>
-<section id="id21">
-<h2>Parameters:<a class="headerlink" href="#id21" title="Link to this heading">¶</a></h2>
+<section id="id19">
+<h2>Parameters:<a class="headerlink" href="#id19" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>RphiI<span class="classifier">TODO</span></dt><dd><p>TOOD</p>
+<dt>RphiI<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TOOD</p>
 </dd>
-<dt>xJ<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xJ<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>J<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>J<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>W<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>W<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 <dt>c<span class="classifier">float32</span></dt><dd><p>Default - 0.5; TODO - Parameter description</p>
 </dd>
@@ -396,8 +341,8 @@ note there is a W here which should be binary because we’re not going to sum o
 </dd>
 </dl>
 </section>
-<section id="id22">
-<h2>Returns:<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h2>
+<section id="id20">
+<h2>Returns:<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>E<span class="classifier">TODO</span></dt><dd><p>TODO</p>
 </dd>
@@ -411,29 +356,29 @@ note there is a W here which should be binary because we’re not going to sum o
 <dt class="sig sig-object py" id="slice_alignment_help.transform_image">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">transform_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xJ</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#transform_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.transform_image" title="Link to this definition">¶</a></dt>
 <dd><p>Note this is redundant with the below, but is a nice helper function</p>
-<section id="id23">
-<h2>Parameters:<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h2>
+<section id="id21">
+<h2>Parameters:<a class="headerlink" href="#id21" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>xI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xI<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>I<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>I<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>xv<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xv<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>v<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>v<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>A<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>A<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>xJ<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xJ<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>kwargs<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>kwargs<span class="classifier">dict</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
-<section id="id24">
-<h2>Returns:<a class="headerlink" href="#id24" title="Link to this heading">¶</a></h2>
+<section id="id22">
+<h2>Returns:<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>AphiI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>AphiI<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
@@ -443,17 +388,17 @@ note there is a W here which should be binary because we’re not going to sum o
 <dt class="sig sig-object py" id="slice_alignment_help.v2DToV3D">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">v2DToV3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v2d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#v2DToV3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.v2DToV3D" title="Link to this definition">¶</a></dt>
 <dd><p>TOOD - Function description</p>
-<section id="id25">
-<h2>Parameters:<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h2>
+<section id="id23">
+<h2>Parameters:<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>v2d<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>v2d<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
-<section id="id26">
-<h2>Returns:<a class="headerlink" href="#id26" title="Link to this heading">¶</a></h2>
+<section id="id24">
+<h2>Returns:<a class="headerlink" href="#id24" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>out<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>out<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
@@ -463,59 +408,59 @@ note there is a W here which should be binary because we’re not going to sum o
 <dt class="sig sig-object py" id="slice_alignment_help.weighted_see_registration">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">weighted_see_registration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xJ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">J</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmaR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hfig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#weighted_see_registration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.weighted_see_registration" title="Link to this definition">¶</a></dt>
 <dd><p>TODO - Function description</p>
-<section id="id27">
-<h2>Parameters:<a class="headerlink" href="#id27" title="Link to this heading">¶</a></h2>
+<section id="id25">
+<h2>Parameters:<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>xI<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xI<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>I<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>I<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>xJ<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xJ<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>J<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>J<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>W<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>W<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>xv<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>xv<span class="classifier">list[torch.Tensor[torch.float32]]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>v<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>v<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>A<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>A<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>a<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>a<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>p<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>p<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>sigmaM<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>sigmaM<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>sigmaR<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>sigmaR<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>niter<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>niter<span class="classifier">int</span></dt><dd><p>TODO</p>
 </dd>
-<dt>epT<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>epT<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>epL<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>epL<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>epv<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>epv<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>draw<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>draw<span class="classifier">bool</span></dt><dd><p>TODO</p>
 </dd>
-<dt>fig<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>fig<span class="classifier">matplotlib.pyplot.figure</span></dt><dd><p>TODO</p>
 </dd>
-<dt>hfig<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>hfig<span class="classifier">matplotlib.pyplot.figure</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
-<section id="id28">
-<h2>Returns:<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h2>
+<section id="id26">
+<h2>Returns:<a class="headerlink" href="#id26" title="Link to this heading">¶</a></h2>
 <dl class="simple">
-<dt>A<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>A<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>v<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>v<span class="classifier">torch.Tensor[torch.float32]</span></dt><dd><p>TODO</p>
 </dd>
-<dt>E<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>E<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
-<dt>ER<span class="classifier">TODO</span></dt><dd><p>TODO</p>
+<dt>ER<span class="classifier">float</span></dt><dd><p>TODO</p>
 </dd>
 </dl>
 </section>
@@ -525,8 +470,8 @@ note there is a W here which should be binary because we’re not going to sum o
 <dt class="sig sig-object py" id="slice_alignment_help.x_from_n_d">
 <span class="sig-prename descclassname"><span class="pre">slice_alignment_help.</span></span><span class="sig-name descname"><span class="pre">x_from_n_d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/slice_alignment_help.html#x_from_n_d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#slice_alignment_help.x_from_n_d" title="Link to this definition">¶</a></dt>
 <dd><p>This function takes in an image size and pixel size, and outputs a zero centered coordinate system</p>
-<section id="id29">
-<h2>Parameters:<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h2>
+<section id="id27">
+<h2>Parameters:<a class="headerlink" href="#id27" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>n<span class="classifier">int or arr[int]</span></dt><dd><p>The image size along each axis</p>
 </dd>
@@ -534,8 +479,8 @@ note there is a W here which should be binary because we’re not going to sum o
 </dd>
 </dl>
 </section>
-<section id="id30">
-<h2>Returns:<a class="headerlink" href="#id30" title="Link to this heading">¶</a></h2>
+<section id="id28">
+<h2>Returns:<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h2>
 <dl class="simple">
 <dt>x<span class="classifier">arr</span></dt><dd><p>The zero-centered coordinate system for an image of size ‘n’ with pixel size ‘d’</p>
 </dd>
@@ -560,7 +505,6 @@ note there is a W here which should be binary because we’re not going to sum o
 <li><a class="reference internal" href="#slice_alignment_help.AX"><code class="docutils literal notranslate"><span class="pre">AX()</span></code></a></li>
 <li><a class="reference internal" href="#slice_alignment_help.L_from_xv_a_p"><code class="docutils literal notranslate"><span class="pre">L_from_xv_a_p()</span></code></a></li>
 <li><a class="reference internal" href="#slice_alignment_help.atlas_from_aligned_slices_and_weights"><code class="docutils literal notranslate"><span class="pre">atlas_from_aligned_slices_and_weights()</span></code></a></li>
-<li><a class="reference internal" href="#slice_alignment_help.atlas_from_aligned_slices_and_weights_"><code class="docutils literal notranslate"><span class="pre">atlas_from_aligned_slices_and_weights_()</span></code></a></li>
 <li><a class="reference internal" href="#slice_alignment_help.detjac"><code class="docutils literal notranslate"><span class="pre">detjac()</span></code></a></li>
 <li><a class="reference internal" href="#slice_alignment_help.down2ax"><code class="docutils literal notranslate"><span class="pre">down2ax()</span></code></a></li>
 <li><a class="reference internal" href="#slice_alignment_help.exp"><code class="docutils literal notranslate"><span class="pre">exp()</span></code></a></li>
