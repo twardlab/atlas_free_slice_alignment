@@ -8,64 +8,48 @@ from IPython.display import display
 
 def atlas_from_aligned_slices_and_weights(xI,I,dtype,device,phiiRiJ,W,asquare,niter=10,draw=0,fig=None,hfig=None,anisotropy_factor=4**2,return_K=False,return_fwhm=False):
     """
-    Inputs are 3D pixel locations. xI
+    TODO - Function Description
     
-    Initial guess of atlas I.
-    
-    We previously calculated RphiI, and we need the oppose. We need phiiRiJ
-    
-    a coefficient in front of laplacian.  This has units of length, so we have asquare \Delta
-    
-    we want to minimize
-    
-    note, W needs to include determinant of jacobians
-    
-    \int \|I - phiiRiJ\|**2 W dx + \int \|L  I\|**2 dx
-    
-    Here L will be a negative laplacian
-    
-    In this version we do bluring in 3D
-
     Parameters:
     ===========
-    xI : TODO
+    xI : list[torch.Tensor[int]]
+        List of 3 orthogonal axes used to define voxel locations
+    I : torch.Tensor
         TODO
-    I : TODO
+    dtype : str
         TODO
-    phiiRiJ : TODO
+    device : str
         TODO
-    W : TODO
+    phiiRiJ : torch.Tensor
         TODO
-    asquare : TODO
+    W : torch.Tensor
         TODO
-    niter : TODO
+    asquare : float
         TODO
-    draw : TODO
+    niter : int
         TODO
-    fig : TODO
+    draw : bool
         TODO
-    hfig :  TODO
+    fig : matplotlib.pyplot.figure
         TODO
-    anisotropy_factor : TODO
+    hfig :  matplotlib.pyplot.figure
         TODO
-    return_K : TODO
+    anisotropy_factor : float
         TODO
-    return_fwhm : TODO
+    return_K : bool
         TODO
-    dtype : TODO
+    return_fwhm : bool
         TODO
-    device : TODO
-        TODO
+
 
     Returns:
     ========
-    I : TODO
+    I : torch.Tensor
         TODO
-    E : TODO
+    E : float
         TODO
-    ER : TODO
+    ER : float
         TODO
-    
     """
     
     if draw:
@@ -169,52 +153,38 @@ def atlas_from_aligned_slices_and_weights(xI,I,dtype,device,phiiRiJ,W,asquare,ni
     else: # normal returns
         return I,E.item(),ER.item()
 
-def atlas_from_aligned_slices_and_weights_(xI,I,phiiRiJ,W,asquare,niter=10,draw=0,fig=None,hfig=None):
+def _atlas_from_aligned_slices_and_weights(xI,I,phiiRiJ,W,asquare,niter=10,draw=0,fig=None,hfig=None):
     """
-    Inputs are 3D pixel locations. xI
+    TODO - Function Description
     
-    Initial guess of atlas I.
-    
-    We previously calculated RphiI, and we need the oppose. We need phiiRiJ
-    
-    a coefficient in front of laplacian.  This has units of length, so we have asquare \Delta
-    
-    we want to minimize
-    
-    note, W needs to include determinant of jacobians
-    
-    \int \|I - phiiRiJ\|**2 W dx + \int \|L  I\|**2 dx
-    
-    Here L will be a negative laplacian
-
     Parameters:
     ===========
-    xI : TODO
+    xI : list[torch.Tensor[int]]
+        List of 3 orthogonal axes used to define voxel locations
+    I : torch.Tensor
         TODO
-    I : TODO
+    phiiRiJ : torch.Tensor
         TODO
-    phiiRiJ : TODO
+    W : torch.Tensor
         TODO
-    W : TODO
+    asquare : float
         TODO
-    asquare : TODO
+    niter : int
         TODO
-    niter : TODO
+    draw : bool
         TODO
-    draw : TODO
+    fig : matplotlib.pyplot.figure
         TODO
-    fig : TODO
-        TODO
-    hfig :  TODO
+    hfig :  matplotlib.pyplot.figure
         TODO
 
     Returns:
     ========
-    I : TODO
+    I : torch.Tensor
         TODO
-    E : TODO
+    E : float
         TODO
-    ER : TODO
+    ER : float
         TODO
     """
     
@@ -299,14 +269,14 @@ def AX(Ai,XJ):
 
     Parameters:
     ===========
-    Ai : TODO
+    Ai : torch.Tensor[torch.float32]
         TODO
-    XJ : TODO
+    XJ : torch.Tensor[torch.float32]
         TODO
 
     Returns:
     ========
-    Xs : TODO
+    Xs : torch.Tensor[torch.float32]
         TODO
     """
     Xs = (Ai[:,None,None,:3,:3]@XJ[...,None])[...,0] + Ai[:,None,None,:3,-1]
@@ -319,12 +289,12 @@ def A2DtoA3D(A):
 
     Parameters:
     ===========
-    A : TODO
+    A : torch.Tensor[torch.float32]
         TODO
 
     Returns:
     ========
-    out : TODO
+    out : torch.Tensor[torch.float32]
         TODO
     """
     row = torch.concatenate( (torch.ones_like(A[:,0,0,None,None]) , torch.zeros_like(A[:,0,None])  ),-1)
@@ -340,14 +310,14 @@ def detjac(xv,v):
 
     Parameters:
     ===========
-    xv : TODO
+    xv : list[torch.Tensor[torch.float32]]
         TODO
-    v : TODO
+    v : torch.Tensor[torch.float32]
         TODO
 
     Returns:
     ========
-    detjac : TODO
+    detjac : torch.Tensor[torch.float32]
         TODO
     """
     dv = [(x[1] - x[0]).item() for x in xv]    
@@ -397,16 +367,16 @@ def exp(x,v,N=5):
 
     Parameters:
     ===========
-    x : TODO
+    x : list[torch.Tensor[torch.float32]]
         TODO
-    v : TODO
+    v : torch.Tensor[torch.float32]
         TODO
-    N : TODO
+    N : int
         TODO
 
     Returns:
     ========
-    phi : TODO
+    phi : torch.Tensor[torch.float32]
         TODO
     '''
     X = torch.stack(torch.meshgrid(*x,indexing='ij'),-1)
@@ -442,18 +412,18 @@ def interp(x,I,phii,**kwargs):
 
     Parameters:
     ===========
-    x : TODO
+    x : list[torch.Tensor[torch.float32]]
         TODO
-    I : TODO
+    I : torch.Tensor[torch.float32]
         TODO
-    phii : TODO
+    phii : torch.Tensor[torch.float32]
         TODO
-    kwargs : TODO
+    kwargs : dict
         TODO
 
     Returns:
     ========
-    phiI : TODO
+    phiI : torch.Tensor[torch.float32]
         TODO
     """
     # first we center phii based on x
@@ -473,24 +443,24 @@ def inverse_transform_image(xI,I,xv,v,A,xJ,**kwargs):
     
     Parameters:
     ===========
-    xI : TODO
+    xI : list[torch.Tensor[torch.float32]]
         TODO
-    I : TODO
+    I : torch.Tensor[torch.float32]
         TODO
-    xv : TODO
+    xv : list[torch.Tensor[torch.float32]]
         TODO
-    v : TODO
+    v : torch.Tensor[torch.float32]
         TODO
-    A : TODO
+    A : torch.Tensor[torch.float32]
         TODO
-    xJ : TODO
+    xJ : list[torch.Tensor[torch.float32]]
         TODO
-    kwargs : TODO
+    kwargs : dict
         TODO
 
     Returns:
     ========
-    phiiAiI : TODO
+    phiiAiI : torch.Tensor[torch.float32]
         TODO
     """
     XJ = torch.stack(torch.meshgrid(*xJ,indexing='ij'),-1)
@@ -522,11 +492,11 @@ def L_from_xv_a_p(xv,a,p):
 
     Parameters:
     ===========
-    xv : TODO
+    xv : list[torch.Tensor[torch.float32]]
         TODO
-    a : TODO
+    a : float
         TODO
-    p : TODO
+    p : float
         TODO
 
     Returns:
@@ -546,13 +516,13 @@ def robust_loss(RphiI,xJ,J,W,c=0.5, return_weights=False):
     
     Parameters:
     ===========
-    RphiI : TODO
+    RphiI : torch.Tensor[torch.float32]
         TOOD
-    xJ : TODO
+    xJ : list[torch.Tensor[torch.float32]]
         TODO
-    J : TODO
+    J : torch.Tensor[torch.float32]
         TODO
-    W : TODO
+    W : torch.Tensor[torch.float32]
         TODO
     c : float32
         Default - 0.5; TODO - Parameter description
@@ -588,24 +558,24 @@ def transform_image(xI,I,xv,v,A,xJ,**kwargs):
     
     Parameters:
     ===========
-    xI : TODO
+    xI : list[torch.Tensor[torch.float32]]
         TODO
-    I : TODO
+    I : torch.Tensor[torch.float32]
         TODO
-    xv : TODO
+    xv : list[torch.Tensor[torch.float32]]
         TODO
-    v : TODO
+    v : torch.Tensor[torch.float32]
         TODO
-    A : TODO
+    A : torch.Tensor[torch.float32]
         TODO
-    xJ : TODO
+    xJ : list[torch.Tensor[torch.float32]]
         TODO
-    kwargs : TODO
+    kwargs : dict
         TODO
 
     Returns:
     ========
-    AphiI : TODO
+    AphiI : torch.Tensor[torch.float32]
         TODO
     """
     XJ = torch.stack(torch.meshgrid(*xJ,indexing='ij'),-1)
@@ -635,12 +605,12 @@ def v2DToV3D(v2d):
 
     Parameters:
     ===========
-    v2d : TODO
+    v2d : torch.Tensor[torch.float32]
         TODO
 
     Returns:
     ========
-    out : TODO
+    out : torch.Tensor[torch.float32]
         TODO
     """
     return torch.concatenate( ( torch.zeros_like(v2d[...,0,None]), v2d ) , -1)
@@ -651,54 +621,54 @@ def weighted_see_registration(xI,I,xJ,J,W,xv,v,A,a,p,sigmaM,sigmaR,niter,epT,epL
 
     Parameters:
     ===========
-    xI : TODO
+    xI : list[torch.Tensor[torch.float32]]
         TODO
-    I : TODO
+    I : torch.Tensor[torch.float32]
         TODO
-    xJ : TODO
+    xJ : list[torch.Tensor[torch.float32]]
         TODO
-    J : TODO
+    J : torch.Tensor[torch.float32]
         TODO
-    W : TODO
+    W : torch.Tensor[torch.float32]
         TODO
-    xv : TODO
+    xv : list[torch.Tensor[torch.float32]]
         TODO
-    v : TODO
+    v : torch.Tensor[torch.float32]
         TODO
-    A : TODO
+    A : torch.Tensor[torch.float32]
         TODO
-    a : TODO
+    a : float
         TODO
-    p : TODO
+    p : float
         TODO
-    sigmaM : TODO
+    sigmaM : float
         TODO
-    sigmaR : TODO
+    sigmaR : float
         TODO
-    niter : TODO
+    niter : int
         TODO
-    epT : TODO
+    epT : float
         TODO
-    epL : TODO
+    epL : float
         TODO
-    epv : TODO
+    epv : float
         TODO
-    draw : TODO
+    draw : bool
         TODO
-    fig : TODO
+    fig : matplotlib.pyplot.figure
         TODO
-    hfig : TODO
+    hfig : matplotlib.pyplot.figure
         TODO
 
     Returns:
     ========
-    A : TODO
+    A : torch.Tensor[torch.float32]
         TODO
-    v : TODO
+    v : torch.Tensor[torch.float32]
         TODO
-    E : TODO
+    E : float
         TODO
-    ER : TODO
+    ER : float
         TODO
     """
 

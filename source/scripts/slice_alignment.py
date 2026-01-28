@@ -20,7 +20,7 @@ def main():
     outdir : str
         The directory where all intermediate and final outputs should be saved
     -fnames : list of str
-        The list of all files to be registered
+        The list of all files to be registered in 
     -npad : int
         TODO
     -down : int
@@ -66,21 +66,21 @@ def main():
     --saveAllFigs : bool
         If present, save all potential figures into \'outdir\'
         
-    Returns:
-    ========
-    A : TODO
+    Output files:
+    =============
+    A.npz : TODO
         TODO
-    v : TODO
+    v.npz : TODO
         TODO
-    Esave : TODO
+    Esave.npz : TODO
         TODO
-    RphiI : TODO
+    RphiI.npz : TODO
         TODO
-    phiiRiJ : TODO
+    phiiRiJ.npz : TODO
         TODO
-    Wshow : TODO
+    Wshow.npz : TODO
         TODO
-    W_robust_loss : TODO
+    W_robust_loss.npz : TODO
         TODO
     """
     
