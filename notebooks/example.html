@@ -65,32 +65,32 @@ import matplotlib.pyplot as plt
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Location of the script on your local device
-script_path = &#39;/home/abenneck/Desktop/atlas_free_slice_alignment/slice_alignment.py&#39;
-cmd_str = f&#39;python3 {script_path}&#39;
+script_path = '/home/abenneck/Desktop/atlas_free_slice_alignment/slice_alignment.py'
+cmd_str = f'python3 {script_path}'
 
 # Directory where all outputs should be stored
-outdir = &#39;/home/abenneck/Desktop/atlas_free_slice_alignment_outputs&#39;
-cmd_str += f&#39; {outdir}&#39;
+outdir = '/home/abenneck/Desktop/atlas_free_slice_alignment_outputs'
+cmd_str += f' {outdir}'
 
 # Directory containing all files to be registered + the relevant fnames
-indir = &#39;/home/abenneck/Desktop/atlas_free_slice_alignment/images&#39;
-filesmoon=[&#39;frame_1_delay-0.2s[1].png&#39;,&#39;frame_0_delay-0.2s[1].png&#39;,&#39;frame_0_delay-0.2s[1].png&#39;,&#39;frame_1_delay-0.2s[1].png&#39;,&#39;frame_2_delay-0.2s[1].png&#39;,&#39;frame_3_delay-0.2s[1].png&#39;,&#39;frame_4_delay-0.2s[1].png&#39;,&#39;frame_5_delay-0.2s[1].png&#39;,&#39;frame_6_delay-0.2s[1].png&#39;,&#39;frame_7_delay-0.2s[1].png&#39;,&#39;frame_7_delay-0.2s[1].png&#39;,&#39;frame_6_delay-0.2s[1].png&#39;]
-cmd_str += &#39; -fnames&#39;
+indir = '/home/abenneck/Desktop/atlas_free_slice_alignment/images'
+filesmoon=['frame_1_delay-0.2s[1].png','frame_0_delay-0.2s[1].png','frame_0_delay-0.2s[1].png','frame_1_delay-0.2s[1].png','frame_2_delay-0.2s[1].png','frame_3_delay-0.2s[1].png','frame_4_delay-0.2s[1].png','frame_5_delay-0.2s[1].png','frame_6_delay-0.2s[1].png','frame_7_delay-0.2s[1].png','frame_7_delay-0.2s[1].png','frame_6_delay-0.2s[1].png']
+cmd_str += ' -fnames'
 for fname in filesmoon:
     fname = os.path.join(indir, fname)
-    cmd_str += f&#39; {fname}&#39;
+    cmd_str += f' {fname}'
 
 # NOTE: All of the scalar and torch-specific arguments are not included in this example
 
 # Include boolean flag for removing artifacts in input images
-cmd_str += &#39; --remove_artifacts&#39;
+cmd_str += ' --remove_artifacts'
 
 # Include boolean flag for saving all figures
-cmd_str += &#39; --saveAllFigs&#39;
+cmd_str += ' --saveAllFigs'
 
 print(cmd_str)
 os.system(cmd_str)
-plt.close(&#39;all&#39;)
+plt.close('all')
 </pre></div>
 </div>
 </div>
